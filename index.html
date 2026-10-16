@@ -209,6 +209,10 @@
   .caixa-erro{background:#FDECEA;border:1px solid #F3B6B1;border-radius:14px;padding:12px 14px;margin:0 0 12px;color:#8A1F17;font-size:14px}
   .caixa-erro b{display:block;margin-bottom:4px}.caixa-erro ul{margin:0;padding-left:18px}
   .job-val{background:#fff;border:1px solid var(--line,#E3E8EE);border-radius:16px;padding:12px 14px;margin-bottom:12px}
+  .instalar{background:#FFF8E1;border-bottom:1px solid #F0DFA0;padding:12px 14px;font-size:14px;line-height:1.4;color:#3B3200;position:relative}
+  .instalar b.t{display:block;font-size:15px;margin-bottom:3px}
+  .instalar button.x{position:absolute;top:6px;right:6px;width:36px;height:36px;border:0;background:transparent;font-size:20px;color:#5E6B7A}
+  .instalar button.inst{margin-top:8px;border:0;background:#1A232F;color:#fff;border-radius:12px;padding:10px 16px;font-size:15px;font-weight:700}
   .olho{position:absolute;right:6px;bottom:6px;width:40px;height:40px;border:0;background:transparent;font-size:20px;cursor:pointer;border-radius:10px}
   .tem-olho{position:relative}.tem-olho input{padding-right:48px}
   .tog-lista .tog{padding:14px 2px;border-bottom:1px solid var(--line,#E3E8EE)}.tog-lista .tog:last-child{border-bottom:0}
@@ -619,6 +623,13 @@ Object.assign(D, {
   d_err_job_val: ["Valor do trabalho inválido.", "Invalid job value.", "Valor del trabajo inválido."],
   t_job_val_ok: ["Valor do job atualizado: {v}", "Job value updated: {v}", "Valor del trabajo actualizado: {v}"],
 });
+Object.assign(D, {
+  ins_t: ["📲 Instale na tela inicial", "📲 Add to your Home Screen", "📲 Instala en la pantalla de inicio"],
+  ins_ios: ["Toque em <b>Compartilhar</b> (o quadrado com a seta ⬆︎, embaixo no Safari) e depois em <b>Adicionar à Tela de Início</b>. Assim o app abre sozinho, até sem internet.", "Tap <b>Share</b> (the square with the arrow ⬆︎, at the bottom of Safari), then <b>Add to Home Screen</b>. Then the app opens by itself, even offline.", "Toca <b>Compartir</b> (el cuadrado con la flecha ⬆︎, abajo en Safari) y luego <b>Añadir a pantalla de inicio</b>. Así la app abre sola, incluso sin internet."],
+  ins_ios_msg: ["Você abriu por dentro de outro app (mensagem, e-mail...). Toque nos três pontinhos ou no ícone da bússola e escolha <b>Abrir no Safari</b>; depois siga o passo acima.", "You opened this inside another app (messages, e-mail...). Tap the three dots or the compass icon and choose <b>Open in Safari</b>; then follow the step above.", "Abriste esto dentro de otra app (mensajes, correo...). Toca los tres puntos o la brújula y elige <b>Abrir en Safari</b>; luego sigue el paso anterior."],
+  ins_btn: ["Instalar agora", "Install now", "Instalar ahora"],
+  ins_fechar: ["Fechar", "Close", "Cerrar"],
+});
 const ERRO_SRV = [["As senhas não são iguais", "e_senhas"], ["pelo menos 8", "e_curta"], ["E-mail inválido", "e_email"], ["Senha incorreta", "e_senha_inc"], ["Muitas tentativas", "e_muitas"], ["Entre com a senha", "e_sessao"], ["Digite APAGAR", "e_apagar"], ["já está instalado", "e_ja"], ["Escolha uma pasta", "e_pasta"], ["Falta o nome da empresa", "e_emp_nome"], ["só pode ser feita no próprio Mac", "e_inst_mac"], ["ainda não foi instalado", "e_nao_inst"], ["data final antes", "e_datas"], ["imagem inválida", "e_img"], ["data inválida", "e_datas"], ["job não encontrado", "e_job"], ["valor inválido", "e_valor"], ["falta o nome", "e_nome"], ["cheque total inválido", "e_cheque"], ["preço da gasolina", "e_preco"], ["número inválido", "e_num"], ["arquivo grande", "e_grande"]];
 function t(k, p) {
   const s = (D[k] || [k])[LANGS[LANG || "pt"].i] ?? D[k][0];
@@ -795,6 +806,21 @@ function rota() { return (location.hash.replace(/^#\/?/, "") || "").split("/").f
 function ir(caminho) { location.hash = "#/" + caminho; }
 window.addEventListener("hashchange", () => { form = null; render(); window.scrollTo(0, 0); });
 
+// instalação na tela inicial: o iPhone NÃO permite instalar sozinho (a Apple exige o toque do usuário); o app mostra o passo a passo.
+let eventoInstalar = null;
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); eventoInstalar = e; if (S.estado) render(); });
+window.addEventListener("appinstalled", () => { eventoInstalar = null; render(); });
+function bannerInstalar() {
+  if (!LOCAL || !LANG) return "";
+  try { if (localStorage.getItem("rd-ins-off") === "1") return ""; } catch {}
+  if (navigator.standalone === true || (window.matchMedia && matchMedia("(display-mode: standalone)").matches)) return "";
+  const ua = navigator.userAgent || "";
+  const ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const dentroDeApp = ios && /(FBAN|FBAV|Instagram|Line|MicroMessenger|GSA|Snapchat|\bwv\b)/.test(ua);
+  if (ios) return `<div class="instalar"><button class="x" data-fechar-ins aria-label="${t("ins_fechar")}">✕</button><b class="t">${t("ins_t")}</b>${dentroDeApp ? t("ins_ios_msg") : t("ins_ios")}</div>`;
+  if (eventoInstalar) return `<div class="instalar"><button class="x" data-fechar-ins aria-label="${t("ins_fechar")}">✕</button><b class="t">${t("ins_t")}</b><button class="inst" data-instalar>${t("ins_btn")}</button></div>`;
+  return "";
+}
 function render() {
   const r = rota(), app = document.getElementById("app");
   let html;
@@ -810,7 +836,7 @@ function render() {
   else if (r[0] === "job") html = telaJob(r[1]);
   else html = telaJobs();
   document.title = nomeEmp() + " | " + t("app");
-  app.innerHTML = html + (LANG && S.estado ? `<div class="selo"><span>${t("selo", {e: esc(nomeEmp())})}</span></div>` : "");
+  app.innerHTML = bannerInstalar() + html + (LANG && S.estado ? `<div class="selo"><span>${t("selo", {e: esc(nomeEmp())})}</span></div>` : "");
   ligar();
 }
 
@@ -1734,6 +1760,10 @@ async function excluirLanc(id, pendente) {
 }
 
 // ---------- eventos ----------
+function ligarBanner() {
+  document.querySelectorAll("[data-fechar-ins]").forEach(b => b.addEventListener("click", () => { try { localStorage.setItem("rd-ins-off", "1"); } catch {} render(); }));
+  document.querySelectorAll("[data-instalar]").forEach(b => b.addEventListener("click", async () => { if (!eventoInstalar) return; eventoInstalar.prompt(); try { await eventoInstalar.userChoice; } catch {} eventoInstalar = null; render(); }));
+}
 function olhosSenha() {   // botão mostrar/ocultar em todo campo de senha
   document.querySelectorAll("input[type=password]").forEach(inp => {
     const lab = inp.closest("label"); if (!lab || lab.querySelector(".olho")) return;
@@ -1744,7 +1774,7 @@ function olhosSenha() {   // botão mostrar/ocultar em todo campo de senha
   });
 }
 function ligar() {
-  olhosSenha();
+  olhosSenha(); ligarBanner();
   if (!S.estado) return;
   if (!S.estado.instalado) return ligarInstalar();
   if (!LANG) { // primeira vez: só a escolha do idioma
