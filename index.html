@@ -630,6 +630,13 @@ Object.assign(D, {
   ins_btn: ["Instalar agora", "Install now", "Instalar ahora"],
   ins_fechar: ["Fechar", "Close", "Cerrar"],
 });
+Object.assign(D, {
+  m_sobre: ["Sobre este app", "About this app", "Acerca de esta app"],
+  m_sobre_s: ["Objetivo e versão", "Purpose and version", "Objetivo y versión"],
+  sobre_obj: ["O objetivo do app foi feito para controlar os trabalhos da sua empresa, com foco em onde estão indo os gastos e qual é o seu gasto por square foot.", "This app was made to control your company's jobs, focusing on where the money is going and what your cost per square foot is.", "Esta app se hizo para controlar los trabajos de tu empresa, con foco en a dónde van los gastos y cuál es tu gasto por pie cuadrado."],
+  sobre_ver: ["Versão", "Version", "Versión"],
+  sobre_local: ["Os seus dados ficam só neste aparelho e o app funciona sem internet.", "Your data stays only on this device and the app works without internet.", "Tus datos quedan solo en este aparato y la app funciona sin internet."],
+});
 const ERRO_SRV = [["As senhas não são iguais", "e_senhas"], ["pelo menos 8", "e_curta"], ["E-mail inválido", "e_email"], ["Senha incorreta", "e_senha_inc"], ["Muitas tentativas", "e_muitas"], ["Entre com a senha", "e_sessao"], ["Digite APAGAR", "e_apagar"], ["já está instalado", "e_ja"], ["Escolha uma pasta", "e_pasta"], ["Falta o nome da empresa", "e_emp_nome"], ["só pode ser feita no próprio Mac", "e_inst_mac"], ["ainda não foi instalado", "e_nao_inst"], ["data final antes", "e_datas"], ["imagem inválida", "e_img"], ["data inválida", "e_datas"], ["job não encontrado", "e_job"], ["valor inválido", "e_valor"], ["falta o nome", "e_nome"], ["cheque total inválido", "e_cheque"], ["preço da gasolina", "e_preco"], ["número inválido", "e_num"], ["arquivo grande", "e_grande"]];
 function t(k, p) {
   const s = (D[k] || [k])[LANGS[LANG || "pt"].i] ?? D[k][0];
@@ -1356,6 +1363,7 @@ async function lerEstado() {
   }
 }
 // campos e blocos que aparecem (por aparelho). Padrão: os 4 campos extras desligados; os 2 blocos ligados.
+const APP_VERSAO = "1.20";
 const CAMPOS_PAD = {sub: false, milhas: false, idas: false, diasw: false, sqft: true, horas: true};
 function campos() { try { return {...CAMPOS_PAD, ...JSON.parse(localStorage.getItem("rd-campos") || "{}")}; } catch { return {...CAMPOS_PAD}; } }
 const campoOn = k => campos()[k];
@@ -1444,6 +1452,13 @@ function telaSetup(sub) {
   if (sub === "senha") return telaSetupSenha();
   if (sub === "base") return telaSetupBase();
   if (sub === "campos") return telaSetupCampos();
+  if (sub === "sobre") return `${cabecalho("RCC", t("m_sobre"), "setup")}
+  <div class="conteudo">${avisos()}
+    <div class="bloco"><div class="titulo-sec"><h3>${t("m_sobre")}</h3></div>
+      <p style="font-size:16px;line-height:1.5;margin:6px 0 12px">${t("sobre_obj")}</p>
+      <p class="fonte">${t("sobre_local")}</p></div>
+    <div class="bloco"><div class="titulo-sec"><h3>${t("sobre_ver")}</h3><span>${APP_VERSAO}</span></div></div>
+  </div>`;
   if (sub === "exportar") return telaSetupExportar();
   if (sub === "apagar") return telaSetupApagar();
   const it = (ic, tit, sub2, rota, extra = "") => `<button class="menu-item ${extra}" ${rota ? `data-ir="${rota}"` : ""} type="button"><div class="ic">${ic}</div><div><b>${tit}</b><small>${sub2}</small></div><span class="seta2">›</span></button>`;
@@ -1456,6 +1471,7 @@ function telaSetup(sub) {
       ${it("🧰", t("m_campos"), t("m_campos_s"), "setup/campos")}
       ${it("🛻", t("cfg_base_t"), t("m_base_s"), "setup/base")}
       ${it("📤", t("m_exp"), t("m_exp_s"), "setup/exportar")}
+      ${it("ℹ️", t("m_sobre"), t("m_sobre_s") + " · " + APP_VERSAO, "setup/sobre")}
       ${it("🔒", t("m_sair"), t("m_sair_s"), "", "")}
       ${it("⚠️", t("m_apagar"), t("m_apagar_s"), "setup/apagar", "perigo")}
     </div>
