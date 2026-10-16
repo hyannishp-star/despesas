@@ -204,6 +204,10 @@
   .arq{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px dashed var(--line);font-size:13px} .arq:last-of-type{border-bottom:0}
   .arq code,.calc-linha code{background:#EEF1F5;border-radius:6px;padding:2px 7px;font-size:12px;word-break:break-all} .arq span{color:var(--muted);font-size:12px}
   .tog{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .olho{position:absolute;right:6px;bottom:6px;width:40px;height:40px;border:0;background:transparent;font-size:20px;cursor:pointer;border-radius:10px}
+  .tem-olho{position:relative}.tem-olho input{padding-right:48px}
+  .tog-lista .tog{padding:14px 2px;border-bottom:1px solid var(--line,#E3E8EE)}.tog-lista .tog:last-child{border-bottom:0}
+  .tog-lista input[type=checkbox]{width:26px;height:26px;flex:none}
   .logo-grande{width:84px;height:84px;border-radius:18px;background:#fff;border:1px solid var(--line);display:grid;place-items:center;margin:6px auto 0;font-size:34px;overflow:hidden}
   .logo-grande img{width:100%;height:100%;object-fit:contain}
   .nome-grande{text-align:center;font-family:"Source Serif 4",Georgia,serif;font-size:20px;font-weight:700}
@@ -583,6 +587,18 @@ if (LOCAL) Object.assign(D, {
   x_backup_nunca: ["⚠ Você ainda não fez nenhum backup.", "⚠ You have not made any backup yet.", "⚠ Aún no has hecho ningún respaldo."],
   t_entregue: ["Arquivo pronto. Salve em Arquivos ou iCloud.", "File ready. Save it to Files or iCloud.", "Archivo listo. Guárdalo en Archivos o iCloud."],
 });
+Object.assign(D, {
+  m_campos: ["Campos do job", "Job fields", "Campos del trabajo"],
+  m_campos_s: ["Ligar ou desligar o que aparece", "Turn on or off what shows", "Activar o desactivar lo que aparece"],
+  c_sub: ["Sub-contrato", "Subcontract", "Subcontrato"],
+  c_milhas: ["Milhas da base até o job (e o gasto com trucks)", "Miles from base to the job (and truck cost)", "Millas de la base al trabajo (y costo de trucks)"],
+  c_dica: ["Desligado = o campo não aparece ao criar ou editar o job. O que já foi digitado fica guardado.", "Off = the field is hidden when creating or editing a job. What was already entered stays saved.", "Apagado = el campo no aparece al crear o editar el trabajo. Lo ya escrito queda guardado."],
+  c_blocos: ["Blocos na tela do job", "Blocks on the job screen", "Bloques en la pantalla del trabajo"],
+  c_campos: ["Campos do formulário (padrão: desligado)", "Form fields (default: off)", "Campos del formulario (predeterminado: apagado)"],
+  c_ligado: ["ligado", "on", "activado"],
+  c_desligado: ["desligado", "off", "apagado"],
+  ver_senha: ["Mostrar ou ocultar a senha", "Show or hide the password", "Mostrar u ocultar la contraseña"],
+});
 const ERRO_SRV = [["As senhas não são iguais", "e_senhas"], ["pelo menos 8", "e_curta"], ["E-mail inválido", "e_email"], ["Senha incorreta", "e_senha_inc"], ["Muitas tentativas", "e_muitas"], ["Entre com a senha", "e_sessao"], ["Digite APAGAR", "e_apagar"], ["já está instalado", "e_ja"], ["Escolha uma pasta", "e_pasta"], ["Falta o nome da empresa", "e_emp_nome"], ["só pode ser feita no próprio Mac", "e_inst_mac"], ["ainda não foi instalado", "e_nao_inst"], ["data final antes", "e_datas"], ["imagem inválida", "e_img"], ["data inválida", "e_datas"], ["job não encontrado", "e_job"], ["valor inválido", "e_valor"], ["falta o nome", "e_nome"], ["cheque total inválido", "e_cheque"], ["preço da gasolina", "e_preco"], ["número inválido", "e_num"], ["arquivo grande", "e_grande"]];
 function t(k, p) {
   const s = (D[k] || [k])[LANGS[LANG || "pt"].i] ?? D[k][0];
@@ -852,7 +868,7 @@ function telaJobs() {
       <div class="kpi sobra ${cheques - gasto < 0 ? "neg" : ""}"><small>${t("sobrou")}</small><strong>${dinheiro(cheques - gasto, false)}</strong><em class="pc">${cheques ? pct((cheques - gasto) / cheques) : "—"}</em></div>
     </div>
     ${cheques ? `<p class="frase">${t("frase_total", {p: pct(gasto / cheques)})}</p>` : ""}
-    ${cartaoMedia()}
+    ${campoOn("horas") ? cartaoMedia() : ""}
     <button class="novo" data-ir="novo-job">${t("novo_job")}</button>
     <div style="display:flex;justify-content:flex-end"><select id="filtro" class="filtro-sel" aria-label="${t("aria_filtro")}">
       <option value="todos" ${S.filtro === "todos" ? "selected" : ""}>${t("f_todos")}</option>
@@ -925,7 +941,7 @@ function telaJob(id) {
       <p class="frase" style="margin-top:8px">${frase}</p>
     </div>
     <button class="botao-grande" data-ir="job/${j.id}/despesa">${t("btn_desp")}</button>
-    ${blocoTruck(j, truck)}${blocoSqft(j, gasto, sobrou)}${blocoHoras(j, sobrou, itens)}
+    ${campoOn("milhas") ? blocoTruck(j, truck) : ""}${campoOn("sqft") ? blocoSqft(j, gasto, sobrou) : ""}${campoOn("horas") ? blocoHoras(j, sobrou, itens) : ""}
     ${gasto ? `<div class="rosca">${rosca(fatias, Math.max(valorJob, gasto), valorJob, j.receita ? t("rosca_txt") : t("rosca_desp"))}<div class="itens">${legenda}</div></div>` : `<div class="vazio">${t("vazio_desp")}</div>`}
     ${ds.length ? `<div class="titulo-sec"><h3>${t("tit_desp_job")}</h3><span>${tn("lanc", ds.length)}</span></div><p class="fonte" style="margin-top:-8px">${t("swipe_dica")}</p><div>${lista}</div>
     <a class="exportar" href="/api/exportar?job=${j.id}&lang=${LANG}" download>${t("exp_job")}</a>` : ""}
@@ -1119,18 +1135,18 @@ function telaJobForm(id) {
     <label class="campo"><small>${t("f_nome")}</small><input id="nome" placeholder="${t("ph_nome")}" value="${esc(f.nome)}" autocomplete="off"></label>
     <label class="campo"><small>${t("f_cidade")}</small><input id="cidade" placeholder="${t("ph_cidade")}" value="${esc(f.cidade)}" autocomplete="off"></label>
     <label class="campo"><small>${t("f_cheque")}</small><input id="receita" class="grande" inputmode="decimal" placeholder="$0" value="${esc(f.receita)}" autocomplete="off"></label>
-    <label class="campo novo-campo"><small>${t("f_sub")}</small><input id="subcontrato" class="grande" inputmode="decimal" placeholder="$0" value="${esc(f.subcontrato)}" autocomplete="off"></label>
-    <p class="dica" style="text-align:left;margin-top:-6px">${t("sub_dica")}</p>
+    ${campoOn("sub") ? `<label class="campo novo-campo"><small>${t("f_sub")}</small><input id="subcontrato" class="grande" inputmode="decimal" placeholder="$0" value="${esc(f.subcontrato)}" autocomplete="off"></label>
+    <p class="dica" style="text-align:left;margin-top:-6px">${t("sub_dica")}</p>` : ""}
     <label class="campo novo-campo"><small>${t("f_end")}</small><input id="endereco" placeholder="${t("ph_end")}" value="${esc(f.endereco)}" autocomplete="off"></label>
     <label class="campo novo-campo"><small>${t("f_sqft")}</small><input id="sqft" inputmode="numeric" placeholder="${t("ph_sqft")}" value="${esc(f.sqft)}" autocomplete="off"></label>
     <div id="sq-box"></div>
-    <div class="campo novo-campo"><small>${t("f_milhas")}</small>
-      <div class="linha"><input id="milhas" inputmode="decimal" placeholder="${t("ph_milhas")}" value="${esc(f.milhas)}" autocomplete="off"><a class="mapa" id="ver-mapa" href="${mapa}" target="_blank" rel="noopener">${t("ver_mapa")}</a></div></div>
-    <div class="dupla">
-      <div class="campo novo-campo"><small>${t("f_idas")}</small>${passo("idas_dono", f.idas_dono)}</div>
-      <div class="campo novo-campo"><small>${t("f_dias")}</small>${passo("dias_work", f.dias_work)}</div>
-    </div>
-    <p class="secao-t">${t("h_titulo")}</p>
+    ${campoOn("milhas") ? `<div class="campo novo-campo"><small>${t("f_milhas")}</small>
+      <div class="linha"><input id="milhas" inputmode="decimal" placeholder="${t("ph_milhas")}" value="${esc(f.milhas)}" autocomplete="off"><a class="mapa" id="ver-mapa" href="${mapa}" target="_blank" rel="noopener">${t("ver_mapa")}</a></div></div>` : ""}
+    ${campoOn("idas") || campoOn("diasw") ? `<div class="dupla">
+      ${campoOn("idas") ? `<div class="campo novo-campo"><small>${t("f_idas")}</small>${passo("idas_dono", f.idas_dono)}</div>` : ""}
+      ${campoOn("diasw") ? `<div class="campo novo-campo"><small>${t("f_dias")}</small>${passo("dias_work", f.dias_work)}</div>` : ""}
+    </div>` : ""}
+    ${campoOn("horas") ? `<p class="secao-t">${t("h_titulo")}</p>
     <div class="dupla">
       <label class="campo novo-campo"><small>${t("f_ini")}</small><input id="data_inicio" type="date" value="${esc(f.data_inicio)}"></label>
       <label class="campo novo-campo"><small>${t("f_fim")}</small><input id="data_fim" type="date" value="${esc(f.data_fim)}"></label>
@@ -1141,7 +1157,7 @@ function telaJobForm(id) {
       <div class="campo novo-campo"><small>${t("f_pessoas")}</small>${passo("pessoas", f.pessoas)}</div>
     </div>
     <div class="calc-linha" id="h-calc">${calcHoras()}</div>
-    <p class="dica" style="text-align:left">${t("h_work_dica")}</p>
+    <p class="dica" style="text-align:left">${t("h_work_dica")}</p>` : ""}
     <div class="campo"><small>${t("f_sit")}</small>
       <div class="chips"><button class="chip ${f.status === "aberto" ? "on" : ""}" data-status="aberto">${t("em_and")}</button><button class="chip ${f.status === "fechado" ? "on" : ""}" data-status="fechado">${t("fechado")}</button></div></div>
     <p class="dica">${t("dica_job")}</p>
@@ -1179,7 +1195,7 @@ function sqBoxHtml() {
       <div class="chips">${chips}</div><p class="fonte">${t("sq_fonte", {fy: q.fy || "?"})}</p>`;
   }
   const dec = n => LANG === "en" ? String(n) : String(n).replace(".", ",");
-  const dist = q.milhas_estimadas != null ? `<p class="fonte" style="margin-top:4px">${t("mi_sug", {m: dec(q.milhas_estimadas), r: dec(q.milhas_reta), f: LANG === "en" ? "1.3" : "1,3"})}</p>
+  const dist = campoOn("milhas") && q.milhas_estimadas != null ? `<p class="fonte" style="margin-top:4px">${t("mi_sug", {m: dec(q.milhas_estimadas), r: dec(q.milhas_reta), f: LANG === "en" ? "1.3" : "1,3"})}</p>
       <div class="chips"><button class="chip ${numero(String(form.milhas).replace(",", ".")) === q.milhas_estimadas ? "on" : ""}" type="button" data-mi="${q.milhas_estimadas}">${t("mi_usar", {m: dec(q.milhas_estimadas)})}</button></div>` : "";
   return `<div class="bloco">${casa}${dist}${botao(t("sq_novo"))}</div>`;
 }
@@ -1199,7 +1215,7 @@ async function buscarSqft(auto) {
     if (form !== meu) return;
     form.sq = {estado: r.achou ? "achou" : "nao", ...r};
     if (r.achou && !numero(form.sqft)) { form.sqft = String(r.sq_moradia || r.sq_total); const el = document.getElementById("sqft"); if (el) el.value = form.sqft; }
-    if (r.milhas_estimadas != null && !numero(String(form.milhas).replace(",", "."))) { form.milhas = String(r.milhas_estimadas); const el = document.getElementById("milhas"); if (el) el.value = form.milhas; }
+    if (campoOn("milhas") && r.milhas_estimadas != null && !numero(String(form.milhas).replace(",", "."))) { form.milhas = String(r.milhas_estimadas); const el = document.getElementById("milhas"); if (el) el.value = form.milhas; }
   } catch { if (form === meu) form.sq = {estado: "nao", motivo: "rede"}; }
   pintarSq();
 }
@@ -1229,6 +1245,10 @@ async function lerEstado() {
     S.estado = {instalado: true, logado: lg, empresa: S.config.empresa, offline: true};
   }
 }
+// campos e blocos que aparecem (por aparelho). Padrão: os 4 campos extras desligados; os 2 blocos ligados.
+const CAMPOS_PAD = {sub: false, milhas: false, idas: false, diasw: false, sqft: true, horas: true};
+function campos() { try { return {...CAMPOS_PAD, ...JSON.parse(localStorage.getItem("rd-campos") || "{}")}; } catch { return {...CAMPOS_PAD}; } }
+const campoOn = k => campos()[k];
 function limparLocal() { try { ["rd-cache", "rd-pendentes", "rd-logado"].forEach(k => localStorage.removeItem(k)); } catch {} S.jobs = []; S.lancamentos = []; S.pendentes = []; S.config = CONFIG_VAZIA; S.atualizado = null; }
 
 // ----- 1. instalação (só na primeira vez; só no próprio Mac) -----
@@ -1313,6 +1333,7 @@ function telaSetup(sub) {
   if (sub === "idioma") return telaSetupIdioma();
   if (sub === "senha") return telaSetupSenha();
   if (sub === "base") return telaSetupBase();
+  if (sub === "campos") return telaSetupCampos();
   if (sub === "exportar") return telaSetupExportar();
   if (sub === "apagar") return telaSetupApagar();
   const it = (ic, tit, sub2, rota, extra = "") => `<button class="menu-item ${extra}" ${rota ? `data-ir="${rota}"` : ""} type="button"><div class="ic">${ic}</div><div><b>${tit}</b><small>${sub2}</small></div><span class="seta2">›</span></button>`;
@@ -1322,6 +1343,7 @@ function telaSetup(sub) {
       ${it("🏢", t("m_emp"), esc(nomeEmp()), "setup/empresa")}
       ${it("🌐", t("cfg_idioma"), LANGS[LANG].nome, "setup/idioma")}
       ${it("🔐", t("m_senha"), t("m_senha_s"), "setup/senha")}
+      ${it("🧰", t("m_campos"), t("m_campos_s"), "setup/campos")}
       ${it("🛻", t("cfg_base_t"), t("m_base_s"), "setup/base")}
       ${it("📤", t("m_exp"), t("m_exp_s"), "setup/exportar")}
       ${it("🔒", t("m_sair"), t("m_sair_s"), "", "")}
@@ -1518,6 +1540,20 @@ function ligarSetupExportar() {
   });
 }
 
+function telaSetupCampos() {
+  const c = campos();
+  const lin = (k, rot) => `<label class="tog"><b style="font-size:14px">${rot}</b><input type="checkbox" data-campo="${k}" ${c[k] ? "checked" : ""}></label>`;
+  return `${cabecalho(t("m_campos"), t("m_campos_s"), "setup")}
+  <div class="conteudo">${avisos()}
+    <div class="bloco tog-lista"><div class="titulo-sec"><h3>${t("c_campos")}</h3></div>
+      ${lin("sub", t("c_sub"))}${lin("milhas", t("c_milhas"))}${lin("idas", t("f_idas"))}${lin("diasw", t("f_dias"))}
+    </div>
+    <div class="bloco tog-lista"><div class="titulo-sec"><h3>${t("c_blocos")}</h3></div>
+      ${lin("sqft", t("sqft_tit"))}${lin("horas", t("h_titulo"))}
+    </div>
+    <p class="dica">${t("c_dica")}</p>
+  </div>`;
+}
 function telaSetupApagar() {
   return `<div class="barra" style="background:#8A1F17"><div class="nav"><button data-ir="setup">${t("voltar_setup")}</button><span></span></div><h2>${t("a_t")}</h2><div class="sub">${t("a_sub")}</div></div>
   <div class="conteudo">${avisos()}
@@ -1564,6 +1600,9 @@ function ligarSetup(sub) {
   }
   if (sub === "exportar") ligarSetupExportar();
   if (sub === "apagar") ligarSetupApagar();
+  if (sub === "campos") document.querySelectorAll("[data-campo]").forEach(i => i.addEventListener("change", () => {
+    const c = campos(); c[i.dataset.campo] = i.checked; try { localStorage.setItem("rd-campos", JSON.stringify(c)); } catch {}
+  }));
 }
 
 // ---------- deslizar a despesa para o lado: mostra Excluir ----------
@@ -1611,7 +1650,17 @@ async function excluirLanc(id, pendente) {
 }
 
 // ---------- eventos ----------
+function olhosSenha() {   // botão mostrar/ocultar em todo campo de senha
+  document.querySelectorAll("input[type=password]").forEach(inp => {
+    const lab = inp.closest("label"); if (!lab || lab.querySelector(".olho")) return;
+    lab.classList.add("tem-olho");
+    const b = document.createElement("button"); b.type = "button"; b.className = "olho"; b.textContent = "👁"; b.setAttribute("aria-label", t("ver_senha")); b.title = t("ver_senha");
+    b.addEventListener("click", () => { const ver = inp.type === "password"; inp.type = ver ? "text" : "password"; b.textContent = ver ? "🙈" : "👁"; inp.focus(); });
+    lab.appendChild(b);
+  });
+}
 function ligar() {
+  olhosSenha();
   if (!S.estado) return;
   if (!S.estado.instalado) return ligarInstalar();
   if (!LANG) { // primeira vez: só a escolha do idioma
@@ -1660,7 +1709,7 @@ function ligar() {
     ["endereco", "cidade"].forEach(id => document.getElementById(id)?.addEventListener("input", () => {
       lerJobForm();
       const dest = (form.endereco || form.cidade || "") + (form.endereco && !/\bMA\b/i.test(form.endereco) ? ", MA" : "");
-      document.getElementById("ver-mapa").href = `https://maps.apple.com/?saddr=${encodeURIComponent(S.config.base)}&daddr=${encodeURIComponent(dest)}&dirflg=d`;
+      const vm = document.getElementById("ver-mapa"); if (vm) vm.href = `https://maps.apple.com/?saddr=${encodeURIComponent(S.config.base)}&daddr=${encodeURIComponent(dest)}&dirflg=d`;
     }));
     document.querySelectorAll("[data-status]").forEach(c => c.addEventListener("click", () => { lerJobForm(); form.status = c.dataset.status; render(); }));
     document.getElementById("salvar-job").addEventListener("click", salvarJob);
