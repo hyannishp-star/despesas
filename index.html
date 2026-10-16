@@ -635,6 +635,7 @@ Object.assign(D, {
   m_sobre_s: ["Objetivo e versão", "Purpose and version", "Objetivo y versión"],
   sobre_obj: ["O objetivo do app foi feito para controlar os trabalhos da sua empresa, com foco em onde estão indo os gastos e qual é o seu gasto por square foot.", "This app was made to control your company's jobs, focusing on where the money is going and what your cost per square foot is.", "Esta app se hizo para controlar los trabajos de tu empresa, con foco en a dónde van los gastos y cuál es tu gasto por pie cuadrado."],
   sobre_ver: ["Versão", "Version", "Versión"],
+  sobre_dev: ["Programador", "Developer", "Programador"],
   sobre_local: ["Os seus dados ficam só neste aparelho e o app funciona sem internet.", "Your data stays only on this device and the app works without internet.", "Tus datos quedan solo en este aparato y la app funciona sin internet."],
 });
 const ERRO_SRV = [["As senhas não são iguais", "e_senhas"], ["pelo menos 8", "e_curta"], ["E-mail inválido", "e_email"], ["Senha incorreta", "e_senha_inc"], ["Muitas tentativas", "e_muitas"], ["Entre com a senha", "e_sessao"], ["Digite APAGAR", "e_apagar"], ["já está instalado", "e_ja"], ["Escolha uma pasta", "e_pasta"], ["Falta o nome da empresa", "e_emp_nome"], ["só pode ser feita no próprio Mac", "e_inst_mac"], ["ainda não foi instalado", "e_nao_inst"], ["data final antes", "e_datas"], ["imagem inválida", "e_img"], ["data inválida", "e_datas"], ["job não encontrado", "e_job"], ["valor inválido", "e_valor"], ["falta o nome", "e_nome"], ["cheque total inválido", "e_cheque"], ["preço da gasolina", "e_preco"], ["número inválido", "e_num"], ["arquivo grande", "e_grande"]];
@@ -1458,6 +1459,7 @@ function telaSetup(sub) {
       <p style="font-size:16px;line-height:1.5;margin:6px 0 12px">${t("sobre_obj")}</p>
       <p class="fonte">${t("sobre_local")}</p></div>
     <div class="bloco"><div class="titulo-sec"><h3>${t("sobre_ver")}</h3><span>${APP_VERSAO}</span></div></div>
+    <div class="bloco"><div class="titulo-sec"><h3>${t("sobre_dev")}</h3><span>Roberto Franco</span></div></div>
   </div>`;
   if (sub === "exportar") return telaSetupExportar();
   if (sub === "apagar") return telaSetupApagar();
