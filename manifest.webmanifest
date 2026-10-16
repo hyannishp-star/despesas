@@ -1,0 +1,12 @@
+{
+  "name": "Receitas e Despesas · Hyannis Painting",
+  "short_name": "Despesas",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#EEF1F5",
+  "theme_color": "#1A232F",
+  "icons": [
+    {"src": "icone-180.png", "sizes": "180x180", "type": "image/png"},
+    {"src": "icone-512.png", "sizes": "512x512", "type": "image/png"}
+  ]
+}

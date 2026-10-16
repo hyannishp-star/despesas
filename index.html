@@ -1,0 +1,1696 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Despesas">
+<meta name="theme-color" content="#1A232F">
+<link rel="apple-touch-icon" href="icone-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Receitas e Despesas | Hyannis Painting</title>
+<style>
+  @font-face{font-family:"Source Serif 4";font-style:normal;font-weight:600 700;font-display:swap;src:url(fonte.woff2) format("woff2")}
+  :root{
+    --navy:#1A232F; --red:#C83028; --bg:#EEF1F5; --card:#FFFFFF; --ink:#1A232F; --muted:#5E6B7A; --line:#E2E7EE; --azul:#4A6FA5;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{background:var(--bg)}
+  body{color:var(--ink);font-family:Arial,Helvetica,sans-serif;font-size:15px}
+  h2,.serif{font-family:"Source Serif 4",Georgia,serif}
+  button,input,textarea,select{font:inherit;color:inherit}
+  button{cursor:pointer;border:0;background:none}
+  .app{max-width:480px;margin:0 auto;min-height:100vh;background:var(--card);display:flex;flex-direction:column;box-shadow:0 0 40px rgba(26,35,47,.08)}
+  .barra{background:var(--navy);color:#fff;padding:calc(14px + env(safe-area-inset-top)) 18px 14px;position:sticky;top:0;z-index:5}
+  .barra .nav{display:flex;justify-content:space-between;align-items:center;font-size:14px;min-height:22px}
+  .barra .nav button,.barra .nav select{color:#fff;opacity:.9;font-size:14px;padding:4px 0}
+  .barra select{background:transparent;border:0;appearance:none;-webkit-appearance:none;text-align:right}
+  .barra select option{color:#000}
+  .barra h2{font-size:22px;margin-top:6px;line-height:1.2;word-break:break-word}
+  .barra .sub{font-size:13px;opacity:.75;margin-top:3px}
+  .conteudo{padding:16px 16px calc(28px + env(safe-area-inset-bottom));flex:1;display:flex;flex-direction:column;gap:14px}
+
+  .kpis{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .kpi{border:1px solid var(--line);border-radius:12px;padding:10px;min-width:0}
+  .kpi small{display:block;font-size:11px;color:var(--muted)}
+  .kpi strong{display:block;font-size:18px;margin-top:4px;font-family:"Source Serif 4",Georgia,serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .kpi.desp strong{color:var(--red)}
+  .kpi.sobra{background:var(--navy);border-color:var(--navy);color:#fff} .kpi.sobra small{color:#C9D2DE}
+  .kpi.neg{background:var(--red);border-color:var(--red)}
+  .frase{font-size:13.5px} .frase b{color:var(--red)} .frase b.ok{color:var(--navy)}
+  .fonte{font-size:11px;color:var(--muted)}
+  .vazio{text-align:center;color:var(--muted);font-size:14px;padding:24px 12px;border:1px dashed var(--line);border-radius:14px;line-height:1.5}
+  .aviso{background:#FFF4E5;border:1px solid #F3C98B;color:#7A4B00;font-size:13px;padding:10px 12px;border-radius:12px;line-height:1.4}
+  .erro{background:#FDECEA;border:1px solid #F2B8B3;color:#8A1F17;font-size:13.5px;padding:12px;border-radius:12px;line-height:1.45}
+
+  .job{border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px;text-align:left;width:100%;background:#fff}
+  .job:active{background:#F6F8FB}
+  .job .cab{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+  .job .nome{font-weight:bold;font-size:15.5px;word-break:break-word}
+  .job .nome small{display:block;font-weight:normal;color:var(--muted);font-size:12.5px;margin-top:2px}
+  .st{font-size:11px;padding:3px 8px;border-radius:20px;white-space:nowrap}
+  .st.aberto{background:#E8EEF7;color:var(--azul)} .st.fechado{background:#EEF1F5;color:var(--muted)}
+  .nums{display:grid;grid-template-columns:1fr 1fr 1fr;font-size:11.5px;color:var(--muted);gap:4px}
+  .nums b{display:block;font-size:14.5px;color:var(--ink);margin-top:2px}
+  .nums .r b{color:var(--red)} .nums .n b{color:var(--red)}
+  .trilho{height:10px;background:#F1F3F6;border-radius:6px;overflow:hidden}
+  .trilho i{display:block;height:100%;border-radius:6px;background:var(--navy)}
+  .trilho i.alto{background:var(--red)}
+  .pct{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);gap:8px}
+  .pct b{color:var(--ink)} .pct .alerta{color:var(--red);font-weight:bold}
+  .novo{border:2px dashed var(--red);color:var(--red);border-radius:14px;text-align:center;padding:14px;font-weight:bold;font-size:15px;width:100%}
+
+  .barras{border:1px solid var(--line);border-radius:12px;padding:12px}
+  .linha-barra{display:flex;align-items:center;gap:8px;font-size:12.5px;margin:6px 0}
+  .linha-barra span:first-child{width:70px;color:var(--muted)}
+  .linha-barra .trilho{flex:1;height:14px;border-radius:7px}
+  .rosca{border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;align-items:center}
+  .itens{width:100%;font-size:13.5px}
+  .item{display:grid;grid-template-columns:10px 1fr auto auto;gap:8px;align-items:center;padding:6px 0;border-bottom:1px dashed var(--line)}
+  .item:last-child{border-bottom:0}
+  .item i{width:10px;height:10px;border-radius:3px}
+  .item em{font-style:normal;color:var(--muted)}
+  .item b{min-width:46px;text-align:right}
+  .botao-grande{background:var(--red);color:#fff;text-align:center;padding:15px;border-radius:14px;font-weight:bold;font-size:16px;width:100%}
+  .titulo-sec{display:flex;justify-content:space-between;align-items:center}
+  .titulo-sec h3{font-size:14.5px}
+  .titulo-sec span{font-size:12px;color:var(--muted)}
+  .swipe{position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
+  .swipe .del-btn{position:absolute;top:0;bottom:0;width:96px;background:var(--red);color:#fff;font-weight:bold;font-size:14px}
+  .swipe .del-esq{left:0} .swipe .del-dir{right:0}
+  .swipe .lanc{position:relative;z-index:1;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+  .lanc{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;padding:9px 0;width:100%;text-align:left;background:#fff}
+  .mini{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#e4e8ee,#cdd3dc);display:grid;place-items:center;font-size:19px;overflow:hidden}
+  .mini img{width:100%;height:100%;object-fit:cover}
+  .lanc p{font-size:14px;min-width:0;word-break:break-word}
+  .lanc p small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+  .lanc .val{font-weight:bold;font-size:14.5px;color:var(--red);white-space:nowrap}
+  .pend{color:#B26A00 !important}
+  .exportar{display:block;border:1px dashed var(--muted);border-radius:12px;text-align:center;padding:12px;font-size:14px;color:var(--muted);text-decoration:none}
+
+  .foto{position:relative;min-height:200px;border-radius:14px;background:linear-gradient(135deg,#e4e8ee,#cdd3dc);display:grid;place-items:center;overflow:hidden}
+  .foto img{width:100%;max-height:340px;object-fit:contain;background:#222;display:block}
+  .foto .tirar{display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--navy);font-weight:bold;padding:30px;font-size:16px}
+  .foto .tirar span{font-size:44px}
+  .foto .dois{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;padding:14px}
+  .foto .dois .tirar{padding:22px 8px;background:#fff;border-radius:14px;font-size:15px}
+  .trocar-box{position:absolute;right:10px;bottom:10px;display:flex;gap:6px}
+  .kpi em.pc,.sqft em.pc{display:block;font-style:normal;font-size:12px;font-weight:bold;margin-top:2px;color:var(--muted)}
+  .kpi.sobra em.pc,.sqft .l em.pc{color:#C9D2DE}
+  .foto .trocar{background:rgba(26,35,47,.85);color:#fff;font-size:12px;padding:7px 11px;border-radius:20px}
+  .lendo{position:absolute;inset:0;background:rgba(26,35,47,.55);color:#fff;display:grid;place-items:center;font-weight:bold}
+  .mic{display:flex;align-items:center;gap:12px;border:2px solid var(--red);border-radius:14px;padding:12px;background:#FFF6F5}
+  .mic button{flex:0 0 54px;height:54px;border-radius:50%;background:var(--red);display:grid;place-items:center;box-shadow:0 0 0 6px rgba(200,48,40,.18)}
+  .mic button.ouvindo{animation:pulsar 1s infinite}
+  @keyframes pulsar{50%{box-shadow:0 0 0 12px rgba(200,48,40,.08)}}
+  .mic .txt{flex:1;min-width:0}
+  .mic small{display:block;color:var(--red);font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:.05em}
+  .mic textarea{width:100%;border:0;background:transparent;resize:none;font-size:15.5px;margin-top:3px;outline:none;min-height:44px}
+  .dica-mic{font-size:12px;color:var(--muted);margin-top:-6px}
+  .campo{border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:block}
+  .campo small{display:block;font-size:11.5px;color:var(--muted)}
+  .campo input{width:100%;border:0;outline:none;font-size:17px;margin-top:4px;background:transparent;min-width:0}
+  .campo input.grande{font-size:26px;font-family:"Source Serif 4",Georgia,serif;font-weight:700}
+  .campo .linha{display:flex;align-items:center;gap:6px}
+  .tag{font-size:10.5px;background:#EEF1F5;color:var(--muted);padding:3px 8px;border-radius:20px;white-space:nowrap}
+  .tag.ok{background:#E8EEF7;color:var(--azul)} .tag.ruim{background:#FDECEA;color:var(--red)}
+  .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:7px}
+  .chip{font-size:13.5px;padding:8px 12px;border-radius:20px;border:1px solid var(--line);background:#fff}
+  .chip.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .chip.mais{border-style:dashed;color:var(--red);border-color:var(--red)}
+  .dupla{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+  .dupla>*{min-width:0}
+  .campo input[type=date]{min-width:0;width:100%;max-width:100%}
+  .salvar{background:var(--red);color:#fff;text-align:center;padding:16px;border-radius:14px;font-weight:bold;font-size:16px;width:100%;margin-top:4px}
+  .salvar:disabled{opacity:.5}
+  .excluir{color:var(--red);font-size:14px;padding:10px;text-align:center;width:100%}
+  .dica{font-size:12px;color:var(--muted);text-align:center}
+  .ajuda{background:#F6F8FB;border-radius:12px;padding:12px;font-size:13px;color:var(--muted);line-height:1.5}
+
+  .veiculo{border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px}
+  .vcab{display:flex;gap:10px;align-items:center} .vcab b{font-size:15px}
+  .vico{width:40px;height:40px;border-radius:10px;background:#EEF1F5;display:grid;place-items:center;font-size:22px;flex:0 0 40px}
+  .calc{font-size:12.5px;color:var(--muted)} .calc b{color:var(--ink)}
+  .regra{font-size:12.5px;background:#F6F8FB;border-radius:8px;padding:7px 9px}
+  .novo-campo{border-left:4px solid var(--red)}
+  .mapa{font-size:12px;color:var(--azul);border:1px solid #C9D6EA;padding:5px 10px;border-radius:20px;white-space:nowrap;text-decoration:none}
+  .stepper{display:flex;align-items:center;justify-content:space-between;margin-top:4px}
+  .stepper button{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);color:var(--red);font-weight:bold;font-size:18px}
+  .stepper b{font-size:18px}
+  .bloco{border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px}
+  .tlin{display:flex;justify-content:space-between;gap:8px;font-size:13px;padding:4px 0;border-bottom:1px dashed var(--line)}
+  .tlin span{color:var(--muted)} .tlin.total{border-bottom:0;font-size:14px} .tlin.total span{color:var(--ink);font-weight:bold} .tlin.total b{color:var(--red)}
+  .sqft{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center}
+  .sqft div{background:#F6F8FB;border-radius:10px;padding:8px 4px;min-width:0}
+  .sqft small{display:block;font-size:11px;color:var(--muted)} .sqft b{display:block;font-size:18px;font-family:"Source Serif 4",Georgia,serif;margin:2px 0}
+  .sqft b.r{color:var(--red)} .sqft em{font-style:normal;font-size:10.5px;color:var(--muted)}
+  .sqft .l{background:var(--navy);color:#fff} .sqft .l small,.sqft .l em{color:#C9D2DE} .sqft .l.neg{background:var(--red)}
+  .frase b.ok{color:var(--navy)}
+  .engrenagem{font-size:20px !important;opacity:1 !important;padding:0 2px !important}
+  .idiomas{display:flex;flex-direction:column;gap:12px;margin-top:6px}
+  .idioma{display:flex;align-items:center;gap:14px;border:2px solid var(--line);border-radius:16px;padding:16px;background:#fff;text-align:left;width:100%}
+  .idioma.on{border-color:var(--red);background:#FFF6F5}
+  .idioma .bandeira{font-size:34px;line-height:1}
+  .idioma b{font-size:18px;display:block} .idioma small{color:var(--muted);font-size:13px}
+  .idioma .marca{margin-left:auto;width:26px;height:26px;border-radius:50%;border:2px solid var(--line);flex:0 0 26px}
+  .idioma.on .marca{background:var(--red);border-color:var(--red);box-shadow:inset 0 0 0 5px #fff}
+  .grande-titulo{font-family:"Source Serif 4",Georgia,serif;font-size:24px;line-height:1.25}
+  .nota{font-size:12px;color:var(--muted);text-align:center;line-height:1.6}
+  .marca-emp{display:inline-flex;align-items:center;gap:8px;font-size:14px}
+  .marca-emp img{width:26px;height:26px;border-radius:7px;background:#fff;object-fit:contain}
+  .secao-t{font-size:13px;font-weight:bold;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+  .calc-linha{background:#F6F8FB;border-radius:10px;padding:9px 11px;font-size:13px;color:var(--muted);line-height:1.5}
+  .calc-linha b{color:var(--ink)}
+  .grade2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .met{border:1px solid var(--line);border-radius:12px;padding:10px;min-width:0}
+  .met small{display:block;font-size:11px;color:var(--muted)}
+  .met b{display:block;font-size:20px;font-family:"Source Serif 4",Georgia,serif;margin:3px 0}
+  .met em{font-style:normal;font-size:11px;color:var(--muted)}
+  .met.destaque{background:var(--navy);border-color:var(--navy);color:#fff} .met.destaque small,.met.destaque em{color:#C9D2DE}
+  .met.r b{color:var(--red)}
+  .media{border:2px solid var(--navy);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:6px}
+  .media h3{font-size:14px}
+  .media .linha2{display:flex;justify-content:space-between;gap:8px;font-size:13px;border-bottom:1px dashed var(--line);padding:4px 0}
+  .media .estim{background:#FFF6F5;border-radius:10px;padding:9px 11px;font-size:13px;line-height:1.45}
+  .minijob{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;color:var(--muted);margin-top:2px}
+  .logo-linha{display:flex;gap:14px;align-items:center;margin-top:8px}
+  .logo-prev{flex:0 0 76px;height:76px;border-radius:16px;background:#fff;border:1px solid var(--line);display:grid;place-items:center;overflow:hidden;font-size:30px}
+  .logo-prev img{width:100%;height:100%;object-fit:contain}
+  .logo-acoes{display:flex;flex-direction:column;gap:8px;flex:1}
+  .btn-peq{border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center;font-size:13.5px;background:#fff;width:100%}
+  .btn-peq.rm{color:var(--red);border-color:#F2B8B3}
+  .topo-prev{background:var(--navy);color:#fff;border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:10px}
+  .topo-prev .l{width:34px;height:34px;border-radius:9px;background:#fff;display:grid;place-items:center;flex:0 0 34px;overflow:hidden}
+  .topo-prev .l img{width:100%;height:100%;object-fit:contain}
+  .topo-prev b{font-size:15px;line-height:1.2} .topo-prev small{display:block;opacity:.75;font-size:11.5px}
+  .menu-lista{border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .menu-item{display:flex;align-items:center;gap:12px;padding:14px;border-bottom:1px solid var(--line);background:#fff;width:100%;text-align:left}
+  .menu-item:last-child{border-bottom:0}
+  .menu-item .ic{width:38px;height:38px;border-radius:10px;background:#EEF1F5;display:grid;place-items:center;font-size:19px;flex:0 0 38px}
+  .menu-item b{display:block;font-size:15px} .menu-item small{display:block;color:var(--muted);font-size:12px;margin-top:2px;word-break:break-word}
+  .menu-item .seta2{margin-left:auto;color:var(--muted);font-size:20px}
+  .menu-item.perigo b{color:var(--red)} .menu-item.perigo .ic{background:#FDECEA}
+  .pill-setup{border:1px solid rgba(255,255,255,.55);border-radius:20px;padding:4px 12px;color:#fff;font-size:13px}
+  .filtro-sel{border:1px solid var(--line);border-radius:20px;padding:6px 12px;background:#fff;font-size:13px;color:var(--muted)}
+  .promessa{background:#F6F8FB;border-radius:12px;padding:12px;font-size:13px;line-height:1.55;color:var(--muted)} .promessa b{color:var(--ink)}
+  .check{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--muted);line-height:1.45}
+  .check input{flex:0 0 22px;width:22px;height:22px;margin-top:1px}
+  .perigo-box{border:2px solid var(--red);border-radius:14px;padding:12px;background:#FFF6F5;font-size:13px;line-height:1.5} .perigo-box b{color:var(--red)}
+  .lista-x{margin:4px 0 0 18px;color:var(--ink);line-height:1.6}
+  .btn-ghost{display:block;border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center;font-size:14px;background:#fff;color:var(--ink);text-decoration:none;width:100%}
+  .salvar.perigo{background:#8A1F17}
+  .arq{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px dashed var(--line);font-size:13px} .arq:last-of-type{border-bottom:0}
+  .arq code,.calc-linha code{background:#EEF1F5;border-radius:6px;padding:2px 7px;font-size:12px;word-break:break-all} .arq span{color:var(--muted);font-size:12px}
+  .tog{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .logo-grande{width:84px;height:84px;border-radius:18px;background:#fff;border:1px solid var(--line);display:grid;place-items:center;margin:6px auto 0;font-size:34px;overflow:hidden}
+  .logo-grande img{width:100%;height:100%;object-fit:contain}
+  .nome-grande{text-align:center;font-family:"Source Serif 4",Georgia,serif;font-size:20px;font-weight:700}
+  .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--navy);color:#fff;padding:12px 18px;border-radius:24px;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.25);z-index:20;max-width:90vw;text-align:center}
+  .selo{text-align:center;font-size:11px;color:var(--muted);padding:6px 0 4px}
+  .selo span{border:1px solid var(--line);background:#fff;padding:4px 10px;border-radius:20px}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<input type="file" id="arquivo" accept="image/*" capture="environment" hidden>
+<input type="file" id="arquivo-album" accept="image/*" hidden>
+<input type="file" id="arquivo-logo" accept="image/*" hidden>
+<input type="file" id="arquivo-logo-cam" accept="image/*" capture="environment" hidden>
+
+<script src="rd-local.js"></script>
+<script>
+"use strict";
+const LOCAL = !!window.RD_LOCAL;   // com o motor local, os dados ficam no próprio aparelho (sem Mac, sem Wi-Fi de casa)
+// ---------- idioma (Português do Brasil, English, Español): vale por aparelho ----------
+const LANGS = {
+  pt: {i: 0, nome: "Português (Brasil)", sub: "Usar o app em português", bandeira: "🇧🇷", fala: "pt-BR", loc: "pt-BR", curto: "Português"},
+  en: {i: 1, nome: "English", sub: "Use the app in English", bandeira: "🇺🇸", fala: "en-US", loc: "en", curto: "English"},
+  es: {i: 2, nome: "Español", sub: "Usar la app en español", bandeira: "🇪🇸", fala: "es-US", loc: "es", curto: "Español"},
+};
+const MESES_L = {pt: ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"], en: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"], es: ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"]};
+function lerLang() { try { const l = localStorage.getItem("rd-lang"); return LANGS[l] ? l : null; } catch { return null; } }
+let LANG = lerLang();
+function setLang(l) { LANG = l; try { localStorage.setItem("rd-lang", l); } catch {} document.documentElement.lang = LANGS[l].loc; }
+if (LANG) document.documentElement.lang = LANGS[LANG].loc;
+
+// cada texto: [português, english, español]
+const D = {
+  app: ["Receitas e Despesas", "Revenue and Expenses", "Ingresos y Gastos"],
+  selo: ["{e} · Receitas e Despesas · app local", "{e} · Revenue and Expenses · local app", "{e} · Ingresos y Gastos · app local"],
+  off_t: ["Sem conexão com o Mac.", "No connection to the Mac.", "Sin conexión con la Mac."],
+  off_d: [" O iPhone precisa estar no Wi-Fi de casa e o Mac ligado com o app aberto. O que você lançar agora fica guardado no iPhone e vai para o Mac quando voltar a conexão.", " The iPhone must be on the home Wi-Fi and the Mac must be on. Whatever you enter now is kept on the iPhone and sent to the Mac when the connection is back.", " El iPhone debe estar en el Wi-Fi de casa y la Mac encendida. Lo que registres ahora se guarda en el iPhone y se envía a la Mac cuando vuelva la conexión."],
+  pend_1: ["⏳ {n} lançamento aguardando envio ao Mac.", "⏳ {n} entry waiting to be sent to the Mac.", "⏳ {n} registro esperando envío a la Mac."],
+  pend_n: ["⏳ {n} lançamentos aguardando envio ao Mac.", "⏳ {n} entries waiting to be sent to the Mac.", "⏳ {n} registros esperando envío a la Mac."],
+  cancelar: ["Cancelar", "Cancel", "Cancelar"],
+  voltar: ["‹ Meus jobs", "‹ My jobs", "‹ Mis trabajos"],
+  editar_job: ["Editar job", "Edit job", "Editar trabajo"],
+  meus_jobs: ["Meus jobs", "My jobs", "Mis trabajos"],
+  em_and: ["Em andamento", "In progress", "En curso"],
+  fechado: ["Fechado", "Closed", "Cerrado"],
+  f_todos: ["Todos ▾", "All ▾", "Todos ▾"],
+  f_and: ["Em andamento ▾", "In progress ▾", "En curso ▾"],
+  f_fech: ["Fechados ▾", "Closed ▾", "Cerrados ▾"],
+  aria_filtro: ["Filtrar jobs", "Filter jobs", "Filtrar trabajos"],
+  aria_cfg: ["Configuração dos trucks", "Truck settings", "Configuración de los trucks"],
+  n_jobs_1: ["{n} job", "{n} job", "{n} trabajo"],
+  n_jobs_n: ["{n} jobs", "{n} jobs", "{n} trabajos"],
+  abertos_n: ["{n} em andamento", "{n} in progress", "{n} en curso"],
+  cheques: ["Valores", "Job values", "Valores"],
+  despesas: ["Despesas", "Expenses", "Gastos"],
+  sobrou: ["Sobrou", "Left over", "Sobró"],
+  cheque_total: ["Valor do trabalho", "Job value", "Valor del trabajo"],
+  cheque: ["Valor", "Value", "Valor"],
+  frase_total: ["No total, as despesas comeram <b>{p} do valor dos trabalhos</b>.", "Overall, expenses took <b>{p} of the job values</b>.", "En total, los gastos se comieron <b>{p} del valor de los trabajos</b>."],
+  novo_job: ["+ Novo job", "+ New job", "+ Nuevo trabajo"],
+  vazio_filtro: ["Nenhum job neste filtro.", "No jobs in this filter.", "Ningún trabajo en este filtro."],
+  vazio_jobs: ["Nenhum job ainda.<br>Toque em <b>+ Novo job</b>, dê o nome e o valor do trabalho.", "No jobs yet.<br>Tap <b>+ New job</b>, enter the name and the job value.", "Aún no hay trabajos.<br>Toca <b>+ Nuevo trabajo</b>, pon el nombre y el valor del trabajo."],
+  exp_todos: ["⬇ Exportar todos os jobs em Excel (com as fotos)", "⬇ Export all jobs to Excel (with photos)", "⬇ Exportar todos los trabajos a Excel (con las fotos)"],
+  exp_job: ["⬇ Exportar este job em Excel (com as fotos)", "⬇ Export this job to Excel (with photos)", "⬇ Exportar este trabajo a Excel (con las fotos)"],
+  fonte: ["Fonte: despesas lançadas por você neste app, guardadas no Mac.", "Source: expenses you entered in this app, stored on the Mac.", "Fuente: gastos que registraste en esta app, guardados en la Mac."],
+  atualizado: [" Atualizado em {d}.", " Updated {d}.", " Actualizado el {d}."],
+  lucro_baixo: ["Lucro: {p} ⚠ abaixo de 20%", "Profit: {p} ⚠ below 20%", "Ganancia: {p} ⚠ menos de 20%"],
+  lucro_ok: ["Lucro: <b>{p}</b> · gasto {g}", "Profit: <b>{p}</b> · spent {g}", "Ganancia: <b>{p}</b> · gasto {g}"],
+  desp_1: ["{n} despesa ›", "{n} expense ›", "{n} gasto ›"],
+  desp_n: ["{n} despesas ›", "{n} expenses ›", "{n} gastos ›"],
+  frase_job: ["As despesas deste job são <b>{p} do valor do trabalho</b>. Lucro: <b class=\"{c}\">{l}</b>.{w}", "This job's expenses are <b>{p} of the job value</b>. Profit: <b class=\"{c}\">{l}</b>.{w}", "Los gastos de este trabajo son <b>{p} del valor del trabajo</b>. Ganancia: <b class=\"{c}\">{l}</b>.{w}"],
+  aviso_baixo: [" ⚠ Abaixo de 20%.", " ⚠ Below 20%.", " ⚠ Menos de 20%."],
+  frase_sem_cheque: ["Coloque o valor do trabalho em <b>Editar job</b> para ver o %.", "Enter the job value in <b>Edit job</b> to see the %.", "Pon el valor del trabajo en <b>Editar trabajo</b> para ver el %."],
+  btn_desp: ["📷 + Despesa neste job", "📷 + Expense on this job", "📷 + Gasto en este trabajo"],
+  vazio_desp: ["Nenhuma despesa ainda.<br>Toque em <b>+ Despesa</b>, tire a foto do recibo e fale o que é.", "No expenses yet.<br>Tap <b>+ Expense</b>, take a photo of the receipt and say what it is.", "Aún no hay gastos.<br>Toca <b>+ Gasto</b>, toma la foto del recibo y di qué es."],
+  tit_desp_job: ["Despesas do job", "Job expenses", "Gastos del trabajo"],
+  lanc_1: ["{n} lançamento", "{n} entry", "{n} registro"],
+  lanc_n: ["{n} lançamentos", "{n} entries", "{n} registros"],
+  com_foto: [" · com foto", " · with photo", " · con foto"],
+  aguardando: [" · aguardando envio", " · waiting to send", " · esperando envío"],
+  truck_tit: ["🛻 Truck (estimativa)", "🛻 Truck (estimate)", "🛻 Truck (estimación)"],
+  truck_sem: ["Coloque as milhas da base até o job em <b>Editar job</b> para o app estimar o gasto com os trucks.", "Enter the miles from the base to the job in <b>Edit job</b> so the app can estimate truck costs.", "Pon las millas de la base al trabajo en <b>Editar trabajo</b> para que la app estime el gasto de los trucks."],
+  truck_ida: ["{m} mi só ida", "{m} mi one way", "{m} mi solo ida"],
+  truck_dono: ["Roberto: {n} idas × {mi} mi = {tot} mi", "Roberto: {n} trips × {mi} mi = {tot} mi", "Roberto: {n} viajes × {mi} mi = {tot} mi"],
+  truck_work: ["Work truck: {n} dias × {mi} mi = {tot} mi", "Work truck: {n} days × {mi} mi = {tot} mi", "Work truck: {n} días × {mi} mi = {tot} mi"],
+  truck_total: ["Total truck · {mi} mi", "Total truck · {mi} mi", "Total truck · {mi} mi"],
+  truck_falta: ["Falta configurar o consumo (MPG) e o preço da gasolina. ", "The fuel economy (MPG) and gas price are not set yet. ", "Falta configurar el consumo (MPG) y el precio de la gasolina. "],
+  abrir_cfg: ["Abrir configuração", "Open settings", "Abrir configuración"],
+  truck_fonte: ["Gasolina {p}/galão{d}{o}. Já somado nas despesas do job. Não lance a gasolina dos trucks por recibo: já está contada aqui.", "Gas {p}/gallon{d}{o}. Already included in the job expenses. Do not enter truck gas by receipt: it is already counted here.", "Gasolina {p}/galón{d}{o}. Ya está sumado en los gastos del trabajo. No registres la gasolina de los trucks por recibo: ya está contada aquí."],
+  truck_proprio: ["; truck com preço próprio: {l}", "; truck with its own price: {l}", "; truck con precio propio: {l}"],
+  n_dono: ["Roberto ", "Roberto ", "Roberto "],
+  n_work: ["work truck ", "work truck ", "work truck "],
+  sqft_tit: ["📐 Por square footage", "📐 Per square foot", "📐 Por pie cuadrado"],
+  sqft_sem: ["Coloque o square footage da casa em <b>Editar job</b> para ver preço, custo e lucro por sq ft.", "Enter the house square footage in <b>Edit job</b> to see price, cost and profit per sq ft.", "Pon los pies cuadrados de la casa en <b>Editar trabajo</b> para ver precio, costo y ganancia por sq ft."],
+  custo: ["Custo", "Cost", "Costo"],
+  lucro: ["Lucro", "Profit", "Ganancia"],
+  por_sqft: ["por sq ft", "per sq ft", "por sq ft"],
+  sqft_dica: ["Serve de base para o próximo estimate de casa parecida.", "Use it as a base for the next estimate on a similar house.", "Sirve de base para el próximo estimado de una casa parecida."],
+  nao_achei_t: ["Job não encontrado", "Job not found", "Trabajo no encontrado"],
+  nao_achei_d: ["Esse job não está na lista. Volte para Meus jobs.", "That job is not in the list. Go back to My jobs.", "Ese trabajo no está en la lista. Vuelve a Mis trabajos."],
+  edit_desp: ["Editar despesa", "Edit expense", "Editar gasto"],
+  nova_desp: ["Nova despesa", "New expense", "Nuevo gasto"],
+  job_lbl: ["Job: {n}", "Job: {n}", "Trabajo: {n}"],
+  lendo: ["lendo...", "reading...", "leyendo..."],
+  lido: ["lido da foto", "read from photo", "leído de la foto"],
+  digite: ["digite o valor", "enter the amount", "escribe el monto"],
+  album: ["Escolher do álbum", "Choose from album", "Elegir del álbum"],
+  trocar_album: ["🖼 Álbum", "🖼 Album", "🖼 Álbum"],
+  foto_uma: ["Uma foto de cada vez: cada foto é uma despesa. O app lê o valor e você diz o que é, para qualificar o gasto.", "One photo at a time: each photo is one expense. The app reads the amount and you say what it is, to classify the expense.", "Una foto a la vez: cada foto es un gasto. La app lee el monto y tú dices qué es, para clasificar el gasto."],
+  price: ["$ Price", "$ Price", "$ Price"],
+  rosca_desp: ["despesas", "expenses", "gastos"],
+  lucro_fatia: ["Lucro (sobrou)", "Profit (left over)", "Ganancia (sobró)"],
+  excluir: ["Excluir", "Delete", "Eliminar"],
+  swipe_dica: ["Deslize a despesa para o lado para excluir.", "Swipe an expense sideways to delete it.", "Desliza un gasto hacia el lado para eliminarlo."],
+  alt_foto: ["Foto do recibo", "Receipt photo", "Foto del recibo"],
+  trocar_foto: ["📷 Tirar outra", "📷 Another photo", "📷 Otra foto"],
+  tirar_foto: ["Tirar foto", "Take photo", "Tomar foto"],
+  lendo_rec: ["Lendo o valor do recibo...", "Reading the receipt amount...", "Leyendo el monto del recibo..."],
+  falar_aria: ["Falar o que é", "Say what it is", "Decir qué es"],
+  voce_falou: ["Você falou", "You said", "Dijiste"],
+  toque_fale: ["Nome da despesa", "Expense name", "Nombre del gasto"],
+  ph_desc: ["Ex.: tinta e caulk", "e.g. paint and caulk", "Ej.: pintura y sellador"],
+  ouvindo: ["Ouvindo...", "Listening...", "Escuchando..."],
+  dica_mic: ["Toque no 🎤 do teclado do iPhone e fale.", "Tap the 🎤 on the iPhone keyboard and speak.", "Toca el 🎤 del teclado del iPhone y habla."],
+  valor: ["Valor", "Amount", "Monto"],
+  data: ["Data", "Date", "Fecha"],
+  loja: ["Loja no recibo: {l}", "Store on the receipt: {l}", "Tienda en el recibo: {l}"],
+  item: ["Item", "Item", "Concepto"],
+  item_auto: [" (escolhido pela sua fala, pode trocar)", " (picked from what you said, you can change it)", " (elegido según lo que dijiste, puedes cambiarlo)"],
+  novo_item: ["+ Novo item", "+ New item", "+ Nuevo concepto"],
+  dica_sem_foto: ["Labor ou despesa sem recibo: pode salvar sem foto.", "Labor or an expense without a receipt: you can save without a photo.", "Mano de obra o gasto sin recibo: puedes guardar sin foto."],
+  salvar_desp: ["Salvar despesa", "Save expense", "Guardar gasto"],
+  excluir_desp: ["Excluir esta despesa", "Delete this expense", "Eliminar este gasto"],
+  salvando: ["Salvando...", "Saving...", "Guardando..."],
+  t_valor: ["Coloque o valor da despesa", "Enter the expense amount", "Pon el monto del gasto"],
+  t_salva: ["Despesa salva: {v} em {i}", "Expense saved: {v} in {i}", "Gasto guardado: {v} en {i}"],
+  t_nao: ["Não salvou: {m}", "Not saved: {m}", "No se guardó: {m}"],
+  t_sem_espaco: ["Sem conexão e sem espaço no iPhone. Tente de novo em casa.", "No connection and no space on the iPhone. Try again at home.", "Sin conexión y sin espacio en el iPhone. Inténtalo de nuevo en casa."],
+  t_guardado: ["Sem conexão: guardado no iPhone, vai para o Mac depois", "No connection: kept on the iPhone, will go to the Mac later", "Sin conexión: guardado en el iPhone, irá a la Mac después"],
+  t_enviados: ["{n} lançamento(s) enviados ao Mac", "{n} entry(ies) sent to the Mac", "{n} registro(s) enviados a la Mac"],
+  prompt_item: ["Nome do novo item (ex.: Aluguel de andaime):", "Name of the new item (e.g. Scaffold rental):", "Nombre del nuevo concepto (ej.: Alquiler de andamio):"],
+  confirm_del: ["Excluir esta despesa? Ela sai das contas do job (a foto continua guardada no Mac).", "Delete this expense? It leaves the job totals (the photo stays stored on the Mac).", "¿Eliminar este gasto? Sale de las cuentas del trabajo (la foto sigue guardada en la Mac)."],
+  t_excl: ["Despesa excluída", "Expense deleted", "Gasto eliminado"],
+  t_sem_mac: ["Sem conexão com o Mac. Tente no Wi-Fi de casa.", "No connection to the Mac. Try on the home Wi-Fi.", "Sin conexión con la Mac. Inténtalo en el Wi-Fi de casa."],
+  novo_job_t: ["Novo job", "New job", "Nuevo trabajo"],
+  crie_pasta: ["Crie uma pasta para cada trabalho", "Create a folder for each job", "Crea una carpeta para cada trabajo"],
+  f_nome: ["Nome do job", "Job name", "Nombre del trabajo"],
+  ph_nome: ["Ex.: Osterville exterior", "e.g. Osterville exterior", "Ej.: Osterville exterior"],
+  f_cidade: ["Cidade", "City", "Ciudad"],
+  ph_cidade: ["Ex.: Osterville", "e.g. Osterville", "Ej.: Osterville"],
+  f_cheque: ["Valor do trabalho (receita)", "Job value (revenue)", "Valor del trabajo (ingreso)"],
+  f_sqft: ["Square footage da casa", "House square footage", "Pies cuadrados de la casa"],
+  ph_sqft: ["Ex.: 2400", "e.g. 2400", "Ej.: 2400"],
+  f_end: ["Endereço do job (para o mapa e para buscar o sq ft)", "Job address (for the map and to look up the sq ft)", "Dirección del trabajo (para el mapa y para buscar el sq ft)"],
+  ph_end: ["Ex.: Main St, Osterville", "e.g. Main St, Osterville", "Ej.: Main St, Osterville"],
+  f_milhas: ["Milhas da base até o job (só ida)", "Miles from the base to the job (one way)", "Millas de la base al trabajo (solo ida)"],
+  ph_milhas: ["Ex.: 12", "e.g. 12", "Ej.: 12"],
+  ver_mapa: ["🗺 Ver no mapa", "🗺 See on map", "🗺 Ver en el mapa"],
+  f_idas: ["Idas do Roberto", "Roberto's trips", "Viajes de Roberto"],
+  f_dias: ["Dias do work truck", "Work truck days", "Días del work truck"],
+  aria_menos: ["menos", "less", "menos"],
+  aria_mais: ["mais", "more", "más"],
+  f_sit: ["Situação", "Status", "Estado"],
+  dica_job: ["\"Ver no mapa\" abre o mapa do iPhone da base até o endereço: veja as milhas e digite aqui. Roberto: mínimo 4 idas (visita, início, conferência, entrega final). Work truck: 1 ida por dia de trabalho.", "\"See on map\" opens the iPhone map from the base to the address: check the miles and type them here. Roberto: at least 4 trips (visit, start, check-in, final walkthrough). Work truck: 1 trip per work day.", "\"Ver en el mapa\" abre el mapa del iPhone desde la base hasta la dirección: mira las millas y escríbelas aquí. Roberto: mínimo 4 viajes (visita, inicio, revisión, entrega final). Work truck: 1 viaje por día de trabajo."],
+  salvar_job: ["Salvar job", "Save job", "Guardar trabajo"],
+  criar_job: ["Criar job", "Create job", "Crear trabajo"],
+  t_nome: ["Dê um nome para o job", "Give the job a name", "Ponle un nombre al trabajo"],
+  t_job: ["Job salvo", "Job saved", "Trabajo guardado"],
+  t_sem_job: ["Sem conexão com o Mac. Para criar job, use o Wi-Fi de casa.", "No connection to the Mac. To create a job, use the home Wi-Fi.", "Sin conexión con la Mac. Para crear un trabajo, usa el Wi-Fi de casa."],
+  cfg_t: ["Setup", "Setup", "Setup"],
+  cfg_sub: ["Base para calcular o gasto com truck", "Base to calculate truck costs", "Base para calcular el gasto de los trucks"],
+  cfg_idioma: ["Idioma", "Language", "Idioma"],
+  cfg_base: ["Saída e volta (base)", "Departure and return (base)", "Salida y regreso (base)"],
+  cfg_gas: ["Preço da gasolina, geral ($ por galão)", "Gas price, general ($ per gallon)", "Precio de la gasolina, general ($ por galón)"],
+  atual_em: [" · atualizado {d}", " · updated {d}", " · actualizado {d}"],
+  ph_gas: ["Ex.: 3.29", "e.g. 3.29", "Ej.: 3.29"],
+  nome_dono: ["Truck do Roberto", "Roberto's truck", "Truck de Roberto"],
+  nome_work: ["Work truck", "Work truck", "Work truck"],
+  f_modelo: ["Modelo (ano, marca, modelo, motor)", "Model (year, make, model, engine)", "Modelo (año, marca, modelo, motor)"],
+  ph_modelo: ["Ex.: 2021 Ford F-150 3.5 V6", "e.g. 2021 Ford F-150 3.5 V6", "Ej.: 2021 Ford F-150 3.5 V6"],
+  f_mpg: ["Consumo (MPG)", "Fuel economy (MPG)", "Consumo (MPG)"],
+  ph_mpg: ["Ex.: 20", "e.g. 20", "Ej.: 20"],
+  f_outros: ["Outros gastos por milha", "Other costs per mile", "Otros gastos por milla"],
+  f_gas_truck: ["Preço da gasolina só deste truck ($ por galão, vazio = usa o geral {g})", "Gas price for this truck only ($ per gallon, empty = uses the general {g})", "Precio de la gasolina solo de este truck ($ por galón, vacío = usa el general {g})"],
+  ph_vazio: ["Vazio", "Empty", "Vacío"],
+  f_fonte: ["Fonte do MPG (opcional)", "MPG source (optional)", "Fuente del MPG (opcional)"],
+  ph_fonte: ["Ex.: fueleconomy.gov, 14/out/2026", "e.g. fueleconomy.gov, Oct 14, 2026", "Ej.: fueleconomy.gov, 14/oct/2026"],
+  regra_dono: ["Idas por job: mínimo <b>4</b> (visita, início, conferência, entrega final)", "Trips per job: at least <b>4</b> (visit, start, check-in, final walkthrough)", "Viajes por trabajo: mínimo <b>4</b> (visita, inicio, revisión, entrega final)"],
+  regra_work: ["Idas por job: <b>1 por dia de trabalho</b>", "Trips per job: <b>1 per work day</b>", "Viajes por trabajo: <b>1 por día de trabajo</b>"],
+  cfg_ajuda: ["Outros gastos por milha = manutenção, pneu, óleo e seguro divididos pelas milhas do ano. Se não souber, deixe vazio e o app conta só a gasolina. Atualize o preço da gasolina de vez em quando.", "Other costs per mile = maintenance, tires, oil and insurance divided by the miles in the year. If you do not know, leave it empty and the app counts only gas. Update the gas price from time to time.", "Otros gastos por milla = mantenimiento, llantas, aceite y seguro divididos entre las millas del año. Si no lo sabes, déjalo vacío y la app cuenta solo la gasolina. Actualiza el precio de la gasolina de vez en cuando."],
+  cfg_idioma_dica: ["A escolha vale só para este aparelho. O celular de um ajudante pode ficar em English ou Español sem mudar o seu.", "This choice applies only to this device. A helper's phone can stay in Português or Español without changing yours.", "La elección vale solo para este aparato. El celular de un ayudante puede quedar en Português o English sin cambiar el tuyo."],
+  salvar_cfg: ["Salvar configuração", "Save settings", "Guardar configuración"],
+  calc: ["Custo por milha: {p}{o} ÷ {mpg} + {x} = <b>{r}</b>", "Cost per mile: {p}{o} ÷ {mpg} + {x} = <b>{r}</b>", "Costo por milla: {p}{o} ÷ {mpg} + {x} = <b>{r}</b>"],
+  calc_truck: [" (preço do truck)", " (truck price)", " (precio del truck)"],
+  calc_vazio: ["Coloque o MPG para calcular o custo por milha.", "Enter the MPG to calculate the cost per mile.", "Pon el MPG para calcular el costo por milla."],
+  t_cfg: ["Configuração salva", "Settings saved", "Configuración guardada"],
+  t_sem_cfg: ["Sem conexão com o Mac. Use o Wi-Fi de casa.", "No connection to the Mac. Use the home Wi-Fi.", "Sin conexión con la Mac. Usa el Wi-Fi de casa."],
+  aria_rosca: ["Despesas por item", "Expenses by item", "Gastos por concepto"],
+  rosca_txt: ["valor do trabalho", "job value", "valor del trabajo"],
+  sq_buscar: ["🔎 Buscar sq ft pelo endereço", "🔎 Look up sq ft from the address", "🔎 Buscar sq ft por la dirección"],
+  sq_buscando: ["🔎 Buscando no registro público...", "🔎 Looking it up in public records...", "🔎 Buscando en el registro público..."],
+  sq_achou: ["<b>Casa encontrada:</b> {a}", "<b>House found:</b> {a}", "<b>Casa encontrada:</b> {a}"],
+  sq_ano: ["construída em {a}", "built in {a}", "construida en {a}"],
+  sq_and_1: ["{n} andar", "{n} story", "{n} piso"],
+  sq_and_n: ["{n} andares", "{n} stories", "{n} pisos"],
+  sq_moradia: ["Área residencial: {n} sq ft", "Living area: {n} sq ft", "Área habitable: {n} sq ft"],
+  sq_total: ["Área construída total: {n} sq ft", "Total built area: {n} sq ft", "Área construida total: {n} sq ft"],
+  sq_fonte: ["Fonte: assessor de Massachusetts (MassGIS), ano fiscal {fy}. Pode diferir da medição real: confira.", "Source: Massachusetts assessor (MassGIS), fiscal year {fy}. It may differ from the real measurement: double-check.", "Fuente: assessor de Massachusetts (MassGIS), año fiscal {fy}. Puede diferir de la medición real: verifícalo."],
+  sq_priv: ["Consulta pública ao governo (Censo e MassGIS). Só o endereço é enviado.", "Public government lookup (Census and MassGIS). Only the address is sent.", "Consulta pública al gobierno (Censo y MassGIS). Solo se envía la dirección."],
+  sq_novo: ["Buscar de novo", "Search again", "Buscar de nuevo"],
+  sq_m_endereco: ["Não achei esse endereço. Confira rua e cidade, ou digite o sq ft.", "I could not find that address. Check the street and city, or type the sq ft.", "No encontré esa dirección. Revisa la calle y la ciudad, o escribe el sq ft."],
+  sq_m_parcela: ["Achei o endereço, mas não o cadastro da casa. Digite o sq ft.", "I found the address but not the house record. Type the sq ft.", "Encontré la dirección pero no el registro de la casa. Escribe el sq ft."],
+  sq_m_sem: ["O cadastro dessa casa não traz a área. Digite o sq ft.", "That house record has no area. Type the sq ft.", "El registro de esa casa no trae el área. Escribe el sq ft."],
+  sq_m_rede: ["Não consegui buscar agora (o Mac precisa estar com internet). Digite o sq ft.", "I could not look it up now (the Mac needs internet). Type the sq ft.", "No pude buscar ahora (la Mac necesita internet). Escribe el sq ft."],
+  sq_falta_end: ["Digite o endereço do job primeiro", "Type the job address first", "Escribe primero la dirección del trabajo"],
+  mi_sug: ["Distância da base: ~{m} mi só ida (linha reta {r} mi × {f} de estrada). É uma estimativa: use o mapa se precisar do valor exato.", "Distance from the base: ~{m} mi one way (straight line {r} mi × {f} for roads). It is an estimate: use the map if you need the exact value.", "Distancia desde la base: ~{m} mi solo ida (línea recta {r} mi × {f} por carreteras). Es una estimación: usa el mapa si necesitas el valor exacto."],
+  mi_usar: ["Usar {m} mi", "Use {m} mi", "Usar {m} mi"],
+  sq_confira: ["⚠ O endereço no cadastro é diferente do que você digitou: confira se é a mesma casa.", "⚠ The address on record is different from what you typed: check that it is the same house.", "⚠ La dirección en el registro es distinta a la que escribiste: verifica que sea la misma casa."],
+  f_sub: ["Sub-contrato: valor combinado com o subcontratado (1ª despesa, opcional)", "Subcontract: amount agreed with the subcontractor (first expense, optional)", "Subcontrato: monto acordado con el subcontratista (primer gasto, opcional)"],
+  sub_dica: ["Entra nas despesas do job, nos gráficos e no Excel. Coloque o valor total combinado; não lance as parcelas de novo.", "It goes into the job expenses, charts and Excel. Enter the total agreed amount; do not enter the installments again.", "Entra en los gastos del trabajo, en los gráficos y en Excel. Pon el monto total acordado; no registres las cuotas otra vez."],
+  h_titulo: ["⏱ Horas e equipe", "⏱ Hours and crew", "⏱ Horas y equipo"],
+  f_ini: ["Data que iniciou", "Start date", "Fecha de inicio"],
+  f_fim: ["Data que finalizou", "End date", "Fecha de fin"],
+  f_dias_trab: ["Dias trabalhados", "Days worked", "Días trabajados"],
+  dias_sug: ["sugerido: segunda a sábado entre as datas", "suggested: Monday to Saturday between the dates", "sugerido: lunes a sábado entre las fechas"],
+  f_horas_dia: ["Horas médias por dia (cada pessoa)", "Average hours per day (each person)", "Horas promedio por día (cada persona)"],
+  f_pessoas: ["Pessoas trabalhando", "People working", "Personas trabajando"],
+  h_calc: ["Total de horas = {d} dias × {h} h × {p} pessoas = <b>{t} horas</b>", "Total hours = {d} days × {h} h × {p} people = <b>{t} hours</b>", "Total de horas = {d} días × {h} h × {p} personas = <b>{t} horas</b>"],
+  h_work_dica: ["O work truck usa os dias trabalhados (1 ida por dia): o campo \"Dias do work truck\" já vem com o mesmo número, e você pode trocar.", "The work truck uses the days worked (1 trip per day): the \"Work truck days\" field comes with the same number, and you can change it.", "El work truck usa los días trabajados (1 viaje por día): el campo \"Días del work truck\" viene con el mismo número y puedes cambiarlo."],
+  h_sem: ["Informe as datas, os dias, as horas e as pessoas em <b>Editar job</b> para ver as horas e cruzar com o sq ft.", "Enter the dates, days, hours and people in <b>Edit job</b> to see the hours and cross them with sq ft.", "Pon las fechas, los días, las horas y las personas en <b>Editar trabajo</b> para ver las horas y cruzarlas con el sq ft."],
+  met_horas: ["Horas totais", "Total hours", "Horas totales"],
+  met_horas_sub: ["{d} dias × {h} h × {p} pessoas", "{d} days × {h} h × {p} people", "{d} días × {h} h × {p} personas"],
+  met_equipe: ["Equipe", "Crew", "Equipo"],
+  eq_1: ["{p} pessoa", "{p} person", "{p} persona"],
+  eq_n: ["{p} pessoas", "{p} people", "{p} personas"],
+  met_h_dia: ["{h} h por dia cada", "{h} h per day each", "{h} h por día cada uno"],
+  met_sq: ["Cruzando com o square foot", "Crossed with square footage", "Cruzando con los pies cuadrados"],
+  met_hsq: ["Horas por sq ft", "Hours per sq ft", "Horas por sq ft"],
+  met_sqh: ["Sq ft por hora", "Sq ft per hour", "Sq ft por hora"],
+  met_din: ["Cruzando com o dinheiro (por hora de trabalho)", "Crossed with money (per work hour)", "Cruzando con el dinero (por hora de trabajo)"],
+  met_price_h: ["$ Price por hora", "$ Price per hour", "$ Price por hora"],
+  met_labor_h: ["Custo de Labor por hora", "Labor cost per hour", "Costo de Labor por hora"],
+  met_lucro_h: ["Lucro por hora de trabalho", "Profit per work hour", "Ganancia por hora de trabajo"],
+  met_fonte: ["Fonte: datas, dias, horas e pessoas que você informou neste app.", "Source: dates, days, hours and people you entered in this app.", "Fuente: fechas, días, horas y personas que registraste en esta app."],
+  media_t: ["⏱ Média dos seus jobs com horas ({n})", "⏱ Average of your jobs with hours ({n})", "⏱ Promedio de tus trabajos con horas ({n})"],
+  media_estim: ["📐 <b>Para o próximo estimate:</b> uma casa de {s} sq ft leva em média <b>{h} horas</b> (≈ {d} dias com {p} pessoas de {hd} h).", "📐 <b>For the next estimate:</b> a {s} sq ft house takes on average <b>{h} hours</b> (≈ {d} days with {p} people at {hd} h).", "📐 <b>Para el próximo estimado:</b> una casa de {s} sq ft lleva en promedio <b>{h} horas</b> (≈ {d} días con {p} personas de {hd} h)."],
+  media_fonte: ["Média de jobs com dias, horas e pessoas informados. Quanto mais jobs, mais confiável.", "Average of jobs with days, hours and people entered. The more jobs, the more reliable.", "Promedio de trabajos con días, horas y personas registrados. Mientras más trabajos, más confiable."],
+  mini_horas: ["⏱ {h} h · {eq}", "⏱ {h} h · {eq}", "⏱ {h} h · {eq}"],
+  mini_hsq: ["{n} h/sq ft", "{n} h/sq ft", "{n} h/sq ft"],
+  mini_sem: ["⏱ sem horas ainda", "⏱ no hours yet", "⏱ sin horas aún"],
+  mini_toque: ["toque para informar", "tap to enter", "toca para registrar"],
+  emp_t: ["🏢 Empresa", "🏢 Company", "🏢 Empresa"],
+  emp_nome: ["Nome da empresa", "Company name", "Nombre de la empresa"],
+  emp_logo: ["Logo da empresa", "Company logo", "Logo de la empresa"],
+  emp_album: ["🖼 Escolher do álbum", "🖼 Choose from album", "🖼 Elegir del álbum"],
+  emp_foto: ["📷 Tirar foto da logo", "📷 Take a photo of the logo", "📷 Tomar foto del logo"],
+  emp_rm: ["Remover logo", "Remove logo", "Quitar logo"],
+  emp_como: ["Como aparece no app", "How it appears in the app", "Cómo aparece en la app"],
+  emp_dica: ["A logo e o nome aparecem no <b>topo da tela principal</b>, na <b>tela de escolha do idioma</b> e no <b>cabeçalho do Excel</b>. A logo pode ser uma foto do álbum; o app reduz o tamanho sozinho e guarda no Mac.", "The logo and name appear at the <b>top of the main screen</b>, on the <b>language screen</b> and in the <b>Excel header</b>. The logo can be a photo from your album; the app shrinks it by itself and keeps it on the Mac.", "El logo y el nombre aparecen en la <b>parte superior de la pantalla principal</b>, en la <b>pantalla de idioma</b> y en el <b>encabezado de Excel</b>. El logo puede ser una foto del álbum; la app lo reduce sola y lo guarda en la Mac."],
+  emp_priv: ["Logo e nome ficam só no Mac. Se não colocar logo, o app mostra só o nome.", "Logo and name stay only on the Mac. Without a logo, the app shows just the name.", "El logo y el nombre quedan solo en la Mac. Sin logo, la app muestra solo el nombre."],
+  cfg_base_t: ["Base e trucks", "Base and trucks", "Base y trucks"],
+  t_logo: ["Logo salva", "Logo saved", "Logo guardado"],
+  t_logo_rm: ["Logo removida", "Logo removed", "Logo quitado"],
+  e_datas: ["A data final é antes da inicial", "The end date is before the start date", "La fecha final es anterior a la inicial"],
+  e_img: ["Não consegui usar essa imagem", "I could not use that image", "No pude usar esa imagen"],
+  inst_t: ["Vamos instalar", "Let's install", "Vamos a instalar"],
+  inst_sub: ["Leva 1 minuto. Seus dados ficam só neste aparelho.", "It takes 1 minute. Your data stays only on this device.", "Toma 1 minuto. Tus datos quedan solo en este aparato."],
+  inst_exist: ["Já existem dados neste app (por exemplo, seus jobs). Eles serão mantidos.", "This app already has data (for example, your jobs). It will be kept.", "Esta app ya tiene datos (por ejemplo, tus trabajos). Se mantendrán."],
+  f_inst_nome: ["Nome da sua empresa", "Your company name", "Nombre de tu empresa"],
+  f_email: ["Seu e-mail", "Your e-mail", "Tu correo"],
+  ph_email: ["voce@empresa.com", "you@company.com", "tu@empresa.com"],
+  f_senha1: ["Crie uma senha", "Create a password", "Crea una contraseña"],
+  f_senha2: ["Repita a senha", "Repeat the password", "Repite la contraseña"],
+  senhas_ok: ["✓ As duas senhas são iguais · mínimo de 8 caracteres", "✓ Both passwords match · at least 8 characters", "✓ Las dos contraseñas son iguales · mínimo 8 caracteres"],
+  senhas_dif: ["As senhas não são iguais", "The passwords do not match", "Las contraseñas no son iguales"],
+  senha_curta: ["A senha precisa de pelo menos 8 caracteres", "The password needs at least 8 characters", "La contraseña necesita al menos 8 caracteres"],
+  promessa: ["🔒 <b>Seus dados ficam só neste aparelho.</b> O app não envia nada para quem criou o programa nem para outro computador. O e-mail só identifica o dono: o app não manda e-mail.", "🔒 <b>Your data stays only on this device.</b> The app sends nothing to whoever made the program or to any other computer. The e-mail only identifies the owner: the app does not send e-mail.", "🔒 <b>Tus datos quedan solo en este aparato.</b> La app no envía nada a quien creó el programa ni a otra computadora. El correo solo identifica al dueño: la app no envía correos."],
+  entendi: ["Entendi: se eu esquecer a senha, só consigo redefinir no próprio aparelho, e o app não recupera por e-mail.", "I understand: if I forget the password, I can only reset it on the device itself, and the app does not recover it by e-mail.", "Entendí: si olvido la contraseña, solo puedo restablecerla en el propio aparato, y la app no la recupera por correo."],
+  btn_instalar: ["Instalar e começar", "Install and start", "Instalar y empezar"],
+  so_no_mac: ["Para instalar, abra este endereço no próprio Mac (não no celular): <b>http://localhost:4180</b>", "To install, open this address on the Mac itself (not on the phone): <b>http://localhost:4180</b>", "Para instalar, abre esta dirección en la propia Mac (no en el celular): <b>http://localhost:4180</b>"],
+  entrar_t: ["Digite a senha para abrir", "Enter the password to open", "Escribe la contraseña para abrir"],
+  f_senha: ["Senha", "Password", "Contraseña"],
+  btn_entrar: ["Entrar", "Sign in", "Entrar"],
+  tent_dica: ["Depois de 5 senhas erradas, o app espera 1 minuto antes de aceitar outra tentativa.", "After 5 wrong passwords, the app waits 1 minute before accepting another try.", "Después de 5 contraseñas incorrectas, la app espera 1 minuto antes de aceptar otro intento."],
+  esqueci: ["Esqueci a senha", "I forgot the password", "Olvidé la contraseña"],
+  esqueci_txt: ["A senha só pode ser redefinida no próprio Mac, sem apagar os dados. No Terminal do Mac, rode:<br><code>bash \"$HOME/Library/Application Support/ReceitasDespesas/gerenciar.sh\" redefinir-senha</code>", "The password can only be reset on the Mac itself, without erasing data. In the Mac Terminal, run:<br><code>bash \"$HOME/Library/Application Support/ReceitasDespesas/gerenciar.sh\" redefinir-senha</code>", "La contraseña solo se puede restablecer en la propia Mac, sin borrar los datos. En la Terminal de la Mac, ejecuta:<br><code>bash \"$HOME/Library/Application Support/ReceitasDespesas/gerenciar.sh\" redefinir-senha</code>"],
+  setup_t: ["Setup", "Setup", "Setup"],
+  voltar_setup: ["‹ Setup", "‹ Setup", "‹ Setup"],
+  m_emp: ["Empresa", "Company", "Empresa"],
+  m_emp_s: ["Nome e logo", "Name and logo", "Nombre y logo"],
+  m_senha: ["Senha e segurança", "Password and security", "Contraseña y seguridad"],
+  m_senha_s: ["Senha atual + nova senha repetida duas vezes", "Current password + new password typed twice", "Contraseña actual + nueva contraseña repetida dos veces"],
+  m_base_s: ["Endereço, gasolina, MPG", "Address, gas, MPG", "Dirección, gasolina, MPG"],
+  m_exp: ["Exportar dados", "Export data", "Exportar datos"],
+  m_exp_s: ["Para IA, Excel e backup", "For AI, Excel and backup", "Para IA, Excel y respaldo"],
+  m_sair: ["Sair (bloquear o app)", "Sign out (lock the app)", "Salir (bloquear la app)"],
+  m_sair_s: ["Pede a senha para voltar", "Asks for the password to come back", "Pide la contraseña para volver"],
+  m_apagar: ["Apagar tudo e reiniciar", "Erase everything and restart", "Borrar todo y reiniciar"],
+  m_apagar_s: ["Pede a senha", "Asks for the password", "Pide la contraseña"],
+  emp_salvar: ["Salvar nome", "Save name", "Guardar nombre"],
+  t_emp: ["Nome salvo", "Name saved", "Nombre guardado"],
+  s_email_t: ["E-mail do dono", "Owner e-mail", "Correo del dueño"],
+  s_email_dica: ["Só identifica o dono. O app não envia e-mail. Trocar o e-mail pede a senha atual.", "It only identifies the owner. The app does not send e-mail. Changing the e-mail asks for the current password.", "Solo identifica al dueño. La app no envía correos. Cambiar el correo pide la contraseña actual."],
+  s_atual: ["Senha atual", "Current password", "Contraseña actual"],
+  s_nova: ["Nova senha", "New password", "Nueva contraseña"],
+  s_nova2: ["Repita a nova senha", "Repeat the new password", "Repite la nueva contraseña"],
+  btn_trocar_senha: ["Trocar a senha", "Change password", "Cambiar la contraseña"],
+  btn_trocar_email: ["Trocar o e-mail", "Change e-mail", "Cambiar el correo"],
+  t_senha_ok: ["Senha trocada", "Password changed", "Contraseña cambiada"],
+  t_email_ok: ["E-mail trocado", "E-mail changed", "Correo cambiado"],
+  x_sub: ["Seus dados em formato que uma IA entende", "Your data in a format an AI understands", "Tus datos en un formato que una IA entiende"],
+  x_ia_t: ["🤖 Pacote para IA", "🤖 Package for AI", "🤖 Paquete para IA"],
+  x_ia_desc: ["Uma pasta com os seus dados em arquivos abertos e um texto explicando cada campo, para qualquer IA ler sem adivinhar:", "A folder with your data in open files and a text explaining each field, so any AI can read it without guessing:", "Una carpeta con tus datos en archivos abiertos y un texto que explica cada campo, para que cualquier IA lo lea sin adivinar:"],
+  x_arq1: ["o que é cada campo", "what each field is", "qué es cada campo"],
+  x_arq2: ["todos os jobs", "all jobs", "todos los trabajos"],
+  x_arq3: ["todas as despesas", "all expenses", "todos los gastos"],
+  x_arq4: ["para planilha", "for spreadsheets", "para hoja de cálculo"],
+  x_arq5: ["os recibos", "the receipts", "los recibos"],
+  x_gerar: ["Gerar pacote agora", "Create package now", "Crear paquete ahora"],
+  x_manter: ["Manter uma cópia sempre atualizada", "Keep an always up-to-date copy", "Mantener una copia siempre actualizada"],
+  x_manter_d: ["A pasta é refeita a cada mudança. A IA que você autorizar lê só essa pasta.", "The folder is rebuilt after every change. The AI you authorize reads only that folder.", "La carpeta se rehace con cada cambio. La IA que autorices lee solo esa carpeta."],
+  x_pasta: ["Pasta (vazio = a padrão)", "Folder (empty = default)", "Carpeta (vacío = la predeterminada)"],
+  x_pasta_salvar: ["Usar esta pasta", "Use this folder", "Usar esta carpeta"],
+  x_excel: ["📊 Excel de todos os jobs (com fotos)", "📊 Excel of all jobs (with photos)", "📊 Excel de todos los trabajos (con fotos)"],
+  x_backup: ["🗜 Backup completo (zip, sem a senha)", "🗜 Full backup (zip, without the password)", "🗜 Respaldo completo (zip, sin la contraseña)"],
+  x_dica: ["A IA só lê o que está nessa pasta. O app nunca envia os arquivos sozinho.", "The AI reads only what is in that folder. The app never sends the files by itself.", "La IA solo lee lo que está en esa carpeta. La app nunca envía los archivos sola."],
+  x_resultado: ["Pasta: {p}", "Folder: {p}", "Carpeta: {p}"],
+  t_ia_ok: ["Pacote pronto: {j} jobs, {d} despesas", "Package ready: {j} jobs, {d} expenses", "Paquete listo: {j} trabajos, {d} gastos"],
+  t_pasta_ok: ["Pasta salva", "Folder saved", "Carpeta guardada"],
+  a_t: ["Apagar tudo", "Erase everything", "Borrar todo"],
+  a_sub: ["Isto não pode ser desfeito", "This cannot be undone", "Esto no se puede deshacer"],
+  a_vai: ["⚠ <b>Vai apagar neste aparelho:</b>", "⚠ <b>This will erase on this device:</b>", "⚠ <b>Va a borrar en este aparato:</b>"],
+  a_l1: ["todos os jobs e despesas", "all jobs and expenses", "todos los trabajos y gastos"],
+  a_l2: ["todas as fotos de recibo", "all receipt photos", "todas las fotos de recibos"],
+  a_l3: ["a logo, o nome e a configuração", "the logo, the name and the settings", "el logo, el nombre y la configuración"],
+  a_l4: ["os backups guardados e a pasta para IA que o app criou", "the stored backups and the AI folder the app created", "los respaldos guardados y la carpeta para IA que creó la app"],
+  a_l5: ["a senha: o app volta para a instalação", "the password: the app goes back to the installation", "la contraseña: la app vuelve a la instalación"],
+  a_exportar: ["📤 Exportar antes (recomendado)", "📤 Export first (recommended)", "📤 Exportar antes (recomendado)"],
+  a_senha: ["Digite a sua senha", "Type your password", "Escribe tu contraseña"],
+  a_confirma: ["Digite APAGAR para confirmar", "Type APAGAR to confirm", "Escribe APAGAR para confirmar"],
+  a_btn: ["Apagar tudo e reiniciar", "Erase everything and restart", "Borrar todo y reiniciar"],
+  a_dica: ["Depois de apagar, a primeira tela é a Instalação, com tudo vazio, como um app novo.", "After erasing, the first screen is the Installation, with everything empty, like a new app.", "Después de borrar, la primera pantalla es la Instalación, con todo vacío, como una app nueva."],
+  t_apagado: ["Tudo apagado", "Everything erased", "Todo borrado"],
+  e_senhas: ["As senhas não são iguais", "The passwords do not match", "Las contraseñas no son iguales"],
+  e_curta: ["A senha precisa de pelo menos 8 caracteres", "The password needs at least 8 characters", "La contraseña necesita al menos 8 caracteres"],
+  e_email: ["E-mail inválido", "Invalid e-mail", "Correo inválido"],
+  e_senha_inc: ["Senha incorreta", "Wrong password", "Contraseña incorrecta"],
+  e_muitas: ["Muitas tentativas. Espere {s} segundos", "Too many tries. Wait {s} seconds", "Demasiados intentos. Espera {s} segundos"],
+  e_sessao: ["Entre com a senha", "Sign in with the password", "Entra con la contraseña"],
+  e_apagar: ["Digite APAGAR para confirmar", "Type APAGAR to confirm", "Escribe APAGAR para confirmar"],
+  e_ja: ["O app já está instalado", "The app is already installed", "La app ya está instalada"],
+  e_pasta: ["Escolha uma pasta comum dentro da sua pasta pessoal", "Choose a regular folder inside your home folder", "Elige una carpeta común dentro de tu carpeta personal"],
+  e_emp_nome: ["Falta o nome da empresa", "The company name is missing", "Falta el nombre de la empresa"],
+  e_inst_mac: ["A instalação só pode ser feita no próprio Mac", "The installation can only be done on the Mac itself", "La instalación solo se puede hacer en la propia Mac"],
+  e_nao_inst: ["O app ainda não foi instalado", "The app has not been installed yet", "La app aún no está instalada"],
+  carregando: ["Abrindo...", "Opening...", "Abriendo..."],
+  e_job: ["Job não encontrado", "Job not found", "Trabajo no encontrado"],
+  e_valor: ["Valor inválido", "Invalid amount", "Monto inválido"],
+  e_nome: ["Falta o nome do job", "The job name is missing", "Falta el nombre del trabajo"],
+  e_cheque: ["Valor do trabalho inválido", "Invalid job value", "Valor del trabajo inválido"],
+  e_preco: ["O preço da gasolina parece errado (use ponto: 4.298)", "The gas price looks wrong (use a dot: 4.298)", "El precio de la gasolina parece incorrecto (usa punto: 4.298)"],
+  e_num: ["Número inválido", "Invalid number", "Número inválido"],
+  e_grande: ["Arquivo grande demais", "File too large", "Archivo demasiado grande"],
+};
+if (LOCAL) Object.assign(D, {
+  fonte: ["Fonte: despesas lançadas por você neste app, guardadas neste aparelho.", "Source: expenses you entered in this app, stored on this device.", "Fuente: gastos que registraste en esta app, guardados en este aparato."],
+  confirm_del: ["Excluir esta despesa? Ela sai das contas do job (a foto continua guardada neste aparelho).", "Delete this expense? It leaves the job totals (the photo stays stored on this device).", "¿Eliminar este gasto? Sale de las cuentas del trabajo (la foto sigue guardada en este aparato)."],
+  sq_m_rede: ["Não consegui buscar agora (precisa de internet). Digite o sq ft.", "I could not look it up now (internet needed). Type the sq ft.", "No pude buscar ahora (necesita internet). Escribe el sq ft."],
+  emp_dica: ["A logo e o nome aparecem no <b>topo da tela principal</b>, na <b>tela de escolha do idioma</b> e no <b>cabeçalho do Excel</b>. A logo pode ser uma foto do álbum; o app reduz o tamanho sozinho e guarda neste aparelho.", "The logo and name appear at the <b>top of the main screen</b>, on the <b>language screen</b> and in the <b>Excel header</b>. The logo can be a photo from your album; the app shrinks it and stores it on this device.", "El logo y el nombre aparecen en la <b>parte superior de la pantalla principal</b>, en la <b>pantalla de idioma</b> y en el <b>encabezado del Excel</b>. El logo puede ser una foto del álbum; la app lo reduce y lo guarda en este aparato."],
+  emp_priv: ["Logo e nome ficam só neste aparelho. Se não colocar logo, o app mostra só o nome.", "Logo and name stay only on this device. Without a logo, the app shows just the name.", "El logo y el nombre quedan solo en este aparato. Sin logo, la app muestra solo el nombre."],
+  esqueci_txt: ["Ninguém pode ver a sua senha nem refazê-la (nem o criador do app): os dados só existem neste aparelho. Opção: apagar tudo e reiniciar, depois restaurar o seu último backup (Setup > Exportar dados). Digite APAGAR para apagar tudo.", "Nobody can see or reset your password (not even the app's creator): the data exists only on this device. Option: erase everything and restart, then restore your latest backup (Setup > Export data). Type APAGAR to erase everything.", "Nadie puede ver ni rehacer tu contraseña (ni el creador de la app): los datos solo existen en este aparato. Opción: borrar todo y reiniciar, y luego restaurar tu último respaldo (Setup > Exportar datos). Escribe APAGAR para borrar todo."],
+  x_restaurar: ["♻ Restaurar um backup (zip)", "♻ Restore a backup (zip)", "♻ Restaurar un respaldo (zip)"],
+  x_rest_senha: ["Digite a sua senha para restaurar", "Type your password to restore", "Escribe tu contraseña para restaurar"],
+  x_rest_ok: ["Backup restaurado: {j} job(s)", "Backup restored: {j} job(s)", "Respaldo restaurado: {j} trabajo(s)"],
+  x_local_dica: ["Os dados ficam só neste aparelho. Faça um backup de vez em quando e guarde em Arquivos/iCloud: se o iPhone for perdido, é o único jeito de recuperar.", "Your data lives only on this device. Make a backup now and then and keep it in Files/iCloud: if the iPhone is lost, it is the only way to recover.", "Tus datos viven solo en este aparato. Haz un respaldo de vez en cuando y guárdalo en Archivos/iCloud: si pierdes el iPhone, es la única forma de recuperarlos."],
+  x_backup_aviso: ["⚠ Faz {d} dias que você não faz backup.", "⚠ It has been {d} days since your last backup.", "⚠ Hace {d} días que no haces respaldo."],
+  x_backup_nunca: ["⚠ Você ainda não fez nenhum backup.", "⚠ You have not made any backup yet.", "⚠ Aún no has hecho ningún respaldo."],
+  t_entregue: ["Arquivo pronto. Salve em Arquivos ou iCloud.", "File ready. Save it to Files or iCloud.", "Archivo listo. Guárdalo en Archivos o iCloud."],
+});
+const ERRO_SRV = [["As senhas não são iguais", "e_senhas"], ["pelo menos 8", "e_curta"], ["E-mail inválido", "e_email"], ["Senha incorreta", "e_senha_inc"], ["Muitas tentativas", "e_muitas"], ["Entre com a senha", "e_sessao"], ["Digite APAGAR", "e_apagar"], ["já está instalado", "e_ja"], ["Escolha uma pasta", "e_pasta"], ["Falta o nome da empresa", "e_emp_nome"], ["só pode ser feita no próprio Mac", "e_inst_mac"], ["ainda não foi instalado", "e_nao_inst"], ["data final antes", "e_datas"], ["imagem inválida", "e_img"], ["data inválida", "e_datas"], ["job não encontrado", "e_job"], ["valor inválido", "e_valor"], ["falta o nome", "e_nome"], ["cheque total inválido", "e_cheque"], ["preço da gasolina", "e_preco"], ["número inválido", "e_num"], ["arquivo grande", "e_grande"]];
+function t(k, p) {
+  const s = (D[k] || [k])[LANGS[LANG || "pt"].i] ?? D[k][0];
+  return s.replace(/\{(\w+)\}/g, (_, n) => (p && p[n] != null ? p[n] : ""));
+}
+const tn = (k, n) => t(k + (n === 1 ? "_1" : "_n"), {n});
+const erroSrv = m => { if ((m || "").includes("Muitas tentativas")) return t("e_muitas", {s: (m.match(/\d+/) || [""])[0]});
+   const x = ERRO_SRV.find(([a]) => (m || "").includes(a)); return x ? t(x[1]) : m; };
+
+// ---------- dados ----------
+// os itens ficam gravados com o nome canônico (português) e aparecem traduzidos
+const ITENS_PADRAO = ["Labor", "Sub-contrato", "Tinta", "Material", "Combustível", "Azek e madeira", "Ferramentas", "Alimentação", "Outros"];
+const ITEM_TXT = {
+  "Labor": ["Labor", "Labor", "Mano de obra"], "Sub-contrato": ["Sub-contrato", "Subcontract", "Subcontrato"], "Tinta": ["Tinta", "Paint", "Pintura"], "Material": ["Material", "Materials", "Materiales"],
+  "Combustível": ["Combustível", "Fuel", "Combustible"], "Azek e madeira": ["Azek e madeira", "Azek and wood", "Azek y madera"],
+  "Ferramentas": ["Ferramentas", "Tools", "Herramientas"], "Alimentação": ["Alimentação", "Meals", "Comidas"], "Outros": ["Outros", "Other", "Otros"],
+  "Truck (estimativa)": ["Truck (estimativa)", "Truck (estimate)", "Truck (estimación)"],
+};
+const disp = nome => (ITEM_TXT[nome] || [])[LANGS[LANG || "pt"].i] || nome;
+const EMOJI = {"Sub-contrato":"🤝","Labor":"👷","Tinta":"🎨","Material":"🧰","Combustível":"⛽","Azek e madeira":"🪵","Ferramentas":"🔧","Alimentação":"🍔","Outros":"🧾"};
+const CORES = ["#1A232F","#C83028","#4A6FA5","#E07A5F","#8D99AE","#6B4E71","#B5651D","#2F6F8F","#A0526D","#7A8B4A"];
+const PALAVRAS = [
+  ["Labor", ["labor","mao de obra","equipe","funcionario","ajudante","pagamento da equipe","salario","diaria","crew","helper","payroll","wages","empleado","trabajador","ayudante","nomina"]],
+  ["Sub-contrato", ["subcontrat","sub-contrat","sub contrat","subcontract","empreiteiro","subempreit","contractor"]],
+  ["Tinta", ["tinta","paint","primer","stain","sherwin","benjamin","verniz","duration","emerald","aura","pintura","barniz"]],
+  ["Combustível", ["combustivel","combustible","gasolina","diesel","posto","shell","mobil","sunoco","cumberland","fuel","gas station","gasolinera","gas "]],
+  ["Azek e madeira", ["azek","madeira","madera","trim","wood","lumber","pvc","board","tabua","tabla","shingle"]],
+  ["Ferramentas", ["ferramenta","herramienta","tool","pincel","brocha","rolo","rodillo","brush","roller","escada","escalera","ladder","broca","serra","sierra","sprayer"]],
+  ["Alimentação", ["almoco","almuerzo","comida","lanche","cafe","coffee","janta","cena","dunkin","food","lunch","dinner","pizza","restaurante","restaurant"]],
+  ["Material", ["material","materiales","supplies","caulk","sellador","fita","cinta","tape","lixa","lija","massa","masilla","lona","spackle","sandpaper","plastico","home depot","lowes","parafuso","tornillo","prego","clavo"]],
+];
+const LUCRO_MINIMO = 0.20; // Roberto 14/out/2026: alerta só quando o lucro do job fica abaixo de 20% do cheque (35% já é muito bom)
+const alerta = taxa => 1 - taxa < LUCRO_MINIMO;
+
+const CONFIG_VAZIA = {empresa: {nome: "Hyannis Painting", logo_v: 0}, base: "136 Connemara Cir, Hyannis, MA 02601", gasolina: 0, gasolina_data: "", veiculos: {dono: {modelo: "", mpg: 0, outros: 0, fonte_mpg: "", gasolina: 0}, work: {modelo: "", mpg: 0, outros: 0, fonte_mpg: "", gasolina: 0}}};
+const S = { estado: null, config: CONFIG_VAZIA, jobs: [], lancamentos: [], atualizado: null, pendentes: [], filtro: "todos", offline: false, carregou: false };
+let form = null; // rascunho da tela de despesa/job/configuração
+let idiomaTemp = null;
+
+const sem = s => (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const dinheiro = (n, centavos = true) => (Number(n) || 0).toLocaleString("en-US", {style:"currency", currency:"USD", minimumFractionDigits: centavos ? 2 : 0, maximumFractionDigits: centavos ? 2 : 0});
+const pct = x => { const s = (x * 100).toFixed(1); return (LANG === "en" ? s : s.replace(".", ",")) + "%"; };
+const hojeISO = () => { const d = new Date(); return new Date(d - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10); };
+const mesNome = m => MESES_L[LANG || "pt"][m];
+const dataCurta = iso => { const [, m, d] = (iso || "").split("-"); if (!m) return ""; return LANG === "en" ? `${mesNome(+m - 1)} ${+d}` : `${+d}/${mesNome(+m - 1)}`; };
+const dataLonga = iso => { const [y, m, d] = (iso || "").split("-"); if (!m) return ""; return LANG === "en" ? `${mesNome(+m - 1)} ${+d}, ${y}` : `${+d}/${mesNome(+m - 1)}/${y}`; };
+const quando = iso => {
+  if (!iso) return "";
+  const d = new Date(iso); let h = d.getHours(); const ap = h >= 12 ? "PM" : "AM"; h = h % 12 || 12;
+  const dia = LANG === "en" ? `${mesNome(d.getMonth())} ${d.getDate()}, ${d.getFullYear()}` : `${d.getDate()}/${mesNome(d.getMonth())}/${d.getFullYear()}`;
+  return `${dia}, ${h}:${String(d.getMinutes()).padStart(2, "0")} ${ap}`;
+};
+const novoId = () => { const b = new Uint8Array(16); crypto.getRandomValues(b); return [...b].map(x => x.toString(16).padStart(2, "0")).join("").replace(/^(.{8})(.{4})(.{4})(.{4})/, "$1-$2-$3-$4-"); };
+const numero = v => { const n = parseFloat(String(v ?? "").replace(/[^0-9.]/g, "")); return isFinite(n) ? Math.round(n * 100) / 100 : 0; };
+
+// ---------- empresa (logo e nome) e horas ----------
+const nomeEmp = () => (S.config.empresa && S.config.empresa.nome) || "Hyannis Painting";
+const logoUrl = () => (S.config.empresa && S.config.empresa.logo_v) ? (LOCAL ? window.RD_LOCAL.logoUrl : `/logo?v=${S.config.empresa.logo_v}`) : "";
+function fotoSrc(n, cheia) {
+  if (!LOCAL) return "/fotos/" + n;
+  if (!cheia) return window.RD_LOCAL.mini(n);
+  const c = window.RD_LOCAL.cheia(n); if (c) return c;
+  window.RD_LOCAL.fotoCompleta(n).then(u => { if (u && form && form.existente && form.fotoUrl !== u) { form.fotoUrl = u; render(); } });
+  return window.RD_LOCAL.mini(n);
+}
+const marca = () => `<span class="marca-emp">${logoUrl() ? `<img src="${logoUrl()}" alt="">` : ""}<span>${esc(nomeEmp())}</span></span>`;
+const numFmt = (n, c = 1) => { const x = Number(n || 0).toFixed(c); return LANG === "en" ? x : x.replace(".", ","); };
+const fmtH = h => numFmt(h, h % 1 ? 1 : 0);
+const horasTot = j => (j.dias_trabalhados || 0) * (j.horas_dia || 0) * (j.pessoas || 0);
+const eq = p => t(p === 1 ? "eq_1" : "eq_n", {p});
+function diasSugeridos(ini, fim) { // segunda a sábado entre as duas datas (domingo não conta)
+  if (!ini || !fim || fim < ini) return null;
+  let d = new Date(ini + "T00:00:00Z"); const f = new Date(fim + "T00:00:00Z"); let n = 0;
+  while (d <= f) { if (d.getUTCDay() !== 0) n++; d = new Date(d.getTime() + 864e5); }
+  return n;
+}
+
+function toast(msg) {
+  const el = document.createElement("div"); el.className = "toast"; el.textContent = msg; document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2600);
+}
+
+// ---------- fila de envio (quando o Mac não responde) ----------
+const FILA = "rd-pendentes";
+function lerFila() { try { return JSON.parse(localStorage.getItem(FILA) || "[]"); } catch { return []; } }
+function gravarFila(f) { try { localStorage.setItem(FILA, JSON.stringify(f)); return true; } catch { return false; } }
+
+async function api(caminho, corpo) {
+  let r, j;
+  if (LOCAL) {   // o "servidor" roda dentro do aparelho (rd-local.js)
+    try { j = await window.RD_LOCAL(caminho, corpo); r = {ok: true, status: 200}; }
+    catch (e) { j = {erro: e.message}; r = {ok: false, status: e.http || 400}; }
+  } else {
+    r = await fetch(caminho, corpo ? {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(corpo)} : {cache: "no-store"});
+    j = await r.json().catch(() => ({}));
+  }
+  if (!r.ok) {
+    if (r.status === 401 && j.erro === "Entre com a senha" && S.estado && S.estado.logado) { // a sessão acabou: volta para a tela de senha
+      S.estado = {...S.estado, logado: false}; try { localStorage.setItem("rd-logado", ""); } catch {} render();
+    }
+    const e = new Error(erroSrv(j.erro) || "erro " + r.status); e.http = r.status; throw e;
+  }
+  return j;
+}
+
+async function carregar() {
+  try {
+    const d = await api("/api/lancamentos");
+    S.jobs = d.jobs; S.lancamentos = d.lancamentos; S.config = d.config || CONFIG_VAZIA; S.atualizado = d.atualizado; S.offline = false;
+    try { localStorage.setItem("rd-cache", JSON.stringify(d)); } catch {}
+  } catch (er) {
+    if (er && er.http === 401) { S.carregou = true; return; }
+    S.offline = true;
+    try { const c = JSON.parse(localStorage.getItem("rd-cache") || "null"); if (c && !S.carregou) { S.jobs = c.jobs; S.lancamentos = c.lancamentos; S.config = c.config || CONFIG_VAZIA; S.atualizado = c.atualizado; } } catch {}
+  }
+  S.carregou = true;
+  S.pendentes = lerFila();
+}
+
+async function enviarFila() {
+  let fila = lerFila(); if (!fila.length) return;
+  const resto = [];
+  for (const p of fila) {
+    try { await api(p.caminho, p.corpo); }
+    catch (e) { if (e.http && e.http < 500 && e.http !== 401) continue; resto.push(p); } // erro de dado: descarta; sem rede: tenta depois
+  }
+  gravarFila(resto);
+  if (resto.length < fila.length) { await carregar(); render(); toast(t("t_enviados", {n: fila.length - resto.length})); }
+}
+
+// ---------- contas ----------
+function despesasDo(jobId) {
+  const enviadas = S.lancamentos.filter(l => l.job_id === jobId);
+  const pend = S.pendentes.filter(p => p.caminho === "/api/lancamento" && p.corpo.job_id === jobId && !enviadas.some(l => l.id === p.corpo.id))
+    .map(p => ({...p.corpo, valor: numero(p.corpo.valor), pendente: true, fotoLocal: p.corpo.foto}));
+  return [...enviadas, ...pend].sort((a, b) => (b.data + (b.criado || "")).localeCompare(a.data + (a.criado || "")));
+}
+const ITEM_TRUCK = "Truck (estimativa)";
+const precoGal = n => "$" + (Number(n) || 0).toFixed(3);
+function precoDe(k) { return S.config.veiculos[k].gasolina || S.config.gasolina; }
+function custoMilha(k) { const v = S.config.veiculos[k]; return (v.mpg ? precoDe(k) / v.mpg : 0) + v.outros; }
+function truckDe(job) {
+  const mi = job.milhas || 0, miD = (job.idas_dono || 0) * 2 * mi, miW = (job.dias_work || 0) * 2 * mi;
+  const dono = miD * custoMilha("dono"), work = miW * custoMilha("work");
+  const faltaConfig = (miD && !S.config.veiculos.dono.mpg) || (miW && !S.config.veiculos.work.mpg) || ((miD && !precoDe("dono")) || (miW && !precoDe("work")));
+  return {mi, miD, miW, dono, work, total: dono + work, faltaConfig};
+}
+function resumo(job) {
+  const ds = despesasDo(job.id), truck = truckDe(job);
+  const gasto = ds.reduce((s, l) => s + l.valor, 0) + truck.total;
+  const porItem = {};
+  ds.forEach(l => porItem[l.item] = (porItem[l.item] || 0) + l.valor);
+  if (truck.total) porItem[ITEM_TRUCK] = truck.total;
+  const itens = Object.entries(porItem).sort((a, b) => b[1] - a[1]);
+  return {ds, gasto, truck, sobrou: job.receita - gasto, taxa: job.receita ? gasto / job.receita : (gasto ? 1 : 0), itens};
+}
+function todosItens() {
+  const usados = S.lancamentos.map(l => l.item);
+  return [...new Set([...ITENS_PADRAO, ...usados, ...(form?.extras || [])])];
+}
+function adivinhar(texto) {
+  const txt = " " + sem(texto) + " ";
+  let melhor = null, pos = Infinity;
+  for (const nome of todosItens()) {
+    for (const cand of new Set([nome, disp(nome)])) { const i = txt.indexOf(sem(cand)); if (nome !== "Outros" && i >= 0 && i < pos) { melhor = nome; pos = i; } }
+  }
+  for (const [nome, chaves] of PALAVRAS) for (const k of chaves) { const i = txt.indexOf(k); if (i >= 0 && i < pos) { melhor = nome; pos = i; } }
+  return melhor;
+}
+
+// ---------- rotas ----------
+function rota() { return (location.hash.replace(/^#\/?/, "") || "").split("/").filter(Boolean); }
+function ir(caminho) { location.hash = "#/" + caminho; }
+window.addEventListener("hashchange", () => { form = null; render(); window.scrollTo(0, 0); });
+
+function render() {
+  const r = rota(), app = document.getElementById("app");
+  let html;
+  if (!S.estado) html = `<div class="conteudo"><p class="fonte">${t("carregando")}</p></div>`;
+  else if (!S.estado.instalado) html = telaInstalar();
+  else if (!LANG) html = telaIdioma();
+  else if (!S.estado.logado) html = telaEntrar();
+  else if (r[0] === "setup") html = telaSetup(r[1]);
+  else if (r[0] === "configuracao") html = telaSetup("base");
+  else if (r[0] === "novo-job") html = telaJobForm(null);
+  else if (r[0] === "job" && r[2] === "editar") html = telaJobForm(r[1]);
+  else if (r[0] === "job" && r[2] === "despesa") html = telaDespesa(r[1], r[3]);
+  else if (r[0] === "job") html = telaJob(r[1]);
+  else html = telaJobs();
+  document.title = nomeEmp() + " | " + t("app");
+  app.innerHTML = html + (LANG && S.estado ? `<div class="selo"><span>${t("selo", {e: esc(nomeEmp())})}</span></div>` : "");
+  ligar();
+}
+
+function avisos() {
+  let h = "";
+  if (S.offline) h += `<div class="erro"><b>${t("off_t")}</b>${t("off_d")}</div>`;
+  if (S.pendentes.length) h += `<div class="aviso">${tn("pend", S.pendentes.length)}</div>`;
+  return h;
+}
+
+// ---------- escolha do idioma (primeira vez) ----------
+function chuteIdioma() { const n = (navigator.language || "pt").toLowerCase(); return n.startsWith("en") ? "en" : n.startsWith("es") ? "es" : "pt"; }
+function telaIdioma() {
+  if (!idiomaTemp) idiomaTemp = chuteIdioma();
+  const cards = Object.entries(LANGS).map(([k, L]) => `
+    <button class="idioma ${idiomaTemp === k ? "on" : ""}" data-lang-pick="${k}"><span class="bandeira">${L.bandeira}</span><div><b>${L.nome}</b><small>${L.sub}</small></div><span class="marca"></span></button>`).join("");
+  return `
+  <div class="barra">
+    <div class="nav">${marca()}<span></span></div>
+    <h2>Receitas e Despesas</h2>
+    <div class="sub">Revenue and Expenses · Ingresos y Gastos</div>
+  </div>
+  <div class="conteudo">
+    <p class="grande-titulo">Escolha o idioma<br><span style="color:var(--muted);font-size:17px">Choose your language · Elige el idioma</span></p>
+    <div class="idiomas">${cards}</div>
+    <p class="nota">Você pode mudar depois em ⚙︎ Configuração.<br>You can change it later in ⚙︎ Settings.<br>Puedes cambiarlo después en ⚙︎ Configuración.</p>
+    <button class="salvar" id="continuar-idioma">Continuar · Continue</button>
+  </div>
+  <div class="selo"><span>${esc(nomeEmp())}</span></div>`;
+}
+
+// média dos jobs com horas: produtividade e estimativa para o próximo estimate
+function cartaoMedia() {
+  const com = S.jobs.filter(j => horasTot(j) > 0).map(j => ({j, h: horasTot(j), r: resumo(j)}));
+  if (!com.length) return "";
+  const soma = (a, f) => a.reduce((s, x) => s + f(x), 0);
+  const H = soma(com, x => x.h), R = soma(com, x => x.j.receita), L = soma(com, x => x.r.sobrou);
+  const sq = com.filter(x => x.j.sqft > 0), Hs = soma(sq, x => x.h), Ss = soma(sq, x => x.j.sqft);
+  const pes = Math.max(1, Math.round(soma(com, x => x.j.pessoas) / com.length)), hd = Math.round(soma(com, x => x.j.horas_dia) / com.length * 2) / 2 || 8;
+  const lin = (rot, v) => `<div class="linha2"><span>${rot}</span><b>${v}</b></div>`;
+  let estim = "";
+  if (Hs > 0) { const horas = Math.round(Hs / Ss * 2000), dias = Math.max(1, Math.round(horas / (pes * hd))); estim = `<div class="estim">${t("media_estim", {s: "2,000", h: fmtH(horas), d: dias, p: pes, hd: fmtH(hd)})}</div>`; }
+  return `<div class="media"><h3>${t("media_t", {n: com.length})}</h3>
+    ${Hs > 0 ? lin(t("met_hsq"), numFmt(Hs / Ss, 3) + " h") + lin(t("met_sqh"), numFmt(Ss / Hs, 1) + " sq ft") : ""}
+    ${R > 0 ? lin(t("met_price_h"), dinheiro(R / H)) + lin(t("met_lucro_h"), dinheiro(L / H)) : ""}
+    ${estim}<p class="fonte">${t("media_fonte")}</p></div>`;
+}
+
+// ---------- tela 1: meus jobs ----------
+function telaJobs() {
+  const lista = S.jobs.filter(j => S.filtro === "todos" || j.status === S.filtro)
+    .sort((a, b) => (a.status === b.status ? (b.criado || "").localeCompare(a.criado || "") : a.status === "aberto" ? -1 : 1));
+  const rs = lista.map(j => ({j, ...resumo(j)}));
+  const cheques = rs.reduce((s, x) => s + x.j.receita, 0), gasto = rs.reduce((s, x) => s + x.gasto, 0);
+  const abertos = S.jobs.filter(j => j.status === "aberto").length;
+  const cards = rs.map(({j, gasto, sobrou, taxa, ds}) => `
+    <button class="job" data-ir="job/${j.id}">
+      <div class="cab"><div class="nome">${esc(j.nome)}${j.cidade ? `<small>${esc(j.cidade)}</small>` : ""}</div><span class="st ${j.status}">${j.status === "aberto" ? t("em_and") : t("fechado")}</span></div>
+      <div class="nums"><span>${t("cheque_total")}<b>${dinheiro(j.receita, false)}</b></span><span class="r">${t("despesas")}<b>${dinheiro(gasto, false)}</b></span><span class="${sobrou < 0 ? "n" : ""}">${t("sobrou")}<b>${dinheiro(sobrou, false)}</b></span></div>
+      <div class="trilho"><i class="${alerta(taxa) ? "alto" : ""}" style="width:${Math.min(taxa, 1) * 100}%"></i></div>
+      <div class="pct">${alerta(taxa) ? `<span class="alerta">${t("lucro_baixo", {p: pct(1 - taxa)})}</span>` : `<span>${t("lucro_ok", {p: pct(1 - taxa), g: pct(taxa)})}</span>`}<span>${tn("desp", ds.length)}</span></div>
+      <div class="minijob">${horasTot(j) ? `<span>${t("mini_horas", {h: fmtH(horasTot(j)), eq: eq(j.pessoas)})}</span><span>${j.sqft ? t("mini_hsq", {n: numFmt(horasTot(j) / j.sqft, 3)}) : ""}</span>` : `<span>${t("mini_sem")}</span><span>${t("mini_toque")}</span>`}</div>
+    </button>`).join("");
+  return `
+  <div class="barra">
+    <div class="nav">${marca()}<button class="pill-setup" data-ir="setup" aria-label="${t("aria_cfg")}">⚙︎ ${t("setup_t")}</button></div>
+    <h2>${t("meus_jobs")}</h2>
+    <div class="sub">${tn("n_jobs", S.jobs.length)} · ${t("abertos_n", {n: abertos})}</div>
+  </div>
+  <div class="conteudo">
+    ${avisos()}
+    <div class="kpis">
+      <div class="kpi"><small>${t("cheques")}</small><strong>${dinheiro(cheques, false)}</strong><em class="pc">${cheques ? "100%" : "—"}</em></div>
+      <div class="kpi desp"><small>${t("despesas")}</small><strong>${dinheiro(gasto, false)}</strong><em class="pc">${cheques ? pct(gasto / cheques) : "—"}</em></div>
+      <div class="kpi sobra ${cheques - gasto < 0 ? "neg" : ""}"><small>${t("sobrou")}</small><strong>${dinheiro(cheques - gasto, false)}</strong><em class="pc">${cheques ? pct((cheques - gasto) / cheques) : "—"}</em></div>
+    </div>
+    ${cheques ? `<p class="frase">${t("frase_total", {p: pct(gasto / cheques)})}</p>` : ""}
+    ${cartaoMedia()}
+    <button class="novo" data-ir="novo-job">${t("novo_job")}</button>
+    <div style="display:flex;justify-content:flex-end"><select id="filtro" class="filtro-sel" aria-label="${t("aria_filtro")}">
+      <option value="todos" ${S.filtro === "todos" ? "selected" : ""}>${t("f_todos")}</option>
+      <option value="aberto" ${S.filtro === "aberto" ? "selected" : ""}>${t("f_and")}</option>
+      <option value="fechado" ${S.filtro === "fechado" ? "selected" : ""}>${t("f_fech")}</option>
+    </select></div>
+    ${cards || `<div class="vazio">${S.jobs.length ? t("vazio_filtro") : t("vazio_jobs")}</div>`}
+    ${S.jobs.length ? `<a class="exportar" href="/api/exportar?lang=${LANG}" download>${t("exp_todos")}</a>` : ""}
+    <p class="fonte">${t("fonte")}${S.atualizado ? t("atualizado", {d: quando(S.atualizado)}) : ""}</p>
+  </div>`;
+}
+
+// ---------- tela 2: controle do job ----------
+const COR_LUCRO = "#C9D6EA";
+// 100% = valor do trabalho: cada despesa e o lucro (o que sobrou) são partes desse valor
+function rosca(fatias, base, centro, rotulo) {
+  let acc = 0;
+  const arcos = fatias.map(([, v, cor]) => {
+    const p = Math.max(0, v) / base * 100; if (p <= 0) return "";
+    const a = `<circle cx="80" cy="80" r="62" pathLength="100" stroke="${cor}" stroke-dasharray="${p} ${100 - p}" stroke-dashoffset="${-acc}"/>`;
+    acc += p; return a;
+  }).join("");
+  return `<svg viewBox="0 0 160 160" width="150" height="150" role="img" aria-label="${t("aria_rosca")}">
+    <g transform="rotate(-90 80 80)" fill="none" stroke-width="26">${arcos}</g>
+    <text x="80" y="74" text-anchor="middle" font-size="10" fill="#5E6B7A">${rotulo}</text>
+    <text x="80" y="96" text-anchor="middle" font-size="${centro >= 100000 ? 16 : 20}" font-weight="700" fill="#1A232F" font-family="Source Serif 4, Georgia, serif">${dinheiro(centro, false)}</text></svg>`;
+}
+function miniatura(l) {
+  if (l.fotoLocal) return `<img src="${l.fotoLocal}" alt="">`;
+  if (l.foto) return `<img src="${esc(fotoSrc(l.foto))}" alt="" loading="lazy">`;
+  return EMOJI[l.item] || "🧾";
+}
+function telaJob(id) {
+  const j = S.jobs.find(x => x.id === id);
+  if (!j) return telaNaoAchei();
+  const {ds, gasto, sobrou, taxa, itens, truck} = resumo(j);
+  const valorJob = j.receita || gasto;               // 100% = valor do trabalho (sem valor: o total das despesas)
+  const fatias = itens.map(([nome, v], i) => [nome, v, CORES[i % CORES.length]]);
+  if (j.receita && sobrou > 0) fatias.push(["__lucro", sobrou, COR_LUCRO]);
+  const legenda = fatias.map(([nome, v, cor]) => `<div class="item"><i style="background:${cor}"></i><span>${nome === "__lucro" ? t("lucro_fatia") : esc(disp(nome))}</span><em>${dinheiro(v)}</em><b>${pct(v / valorJob)}</b></div>`).join("");
+  const pc = v => j.receita ? pct(v / j.receita) : "—";
+  const lista = ds.map(l => `
+    <div class="swipe">
+      <button class="del-btn del-esq" data-del="${l.id}" data-pend="${l.pendente ? 1 : 0}">🗑 ${t("excluir")}</button>
+      <button class="del-btn del-dir" data-del="${l.id}" data-pend="${l.pendente ? 1 : 0}">🗑 ${t("excluir")}</button>
+      <button class="lanc" ${l.pendente ? "" : `data-ir="job/${j.id}/despesa/${l.id}"`}>
+        <div class="mini">${miniatura(l)}</div>
+        <p>${esc(l.descricao || disp(l.item))}<small class="${l.pendente ? "pend" : ""}">${dataCurta(l.data)} · ${esc(disp(l.item))}${l.foto || l.fotoLocal ? t("com_foto") : ""}${l.pendente ? t("aguardando") : ""}</small></p>
+        <span class="val">${dinheiro(l.valor)}</span>
+      </button>
+    </div>`).join("");
+  const frase = j.receita ? t("frase_job", {p: pct(taxa), c: alerta(taxa) ? "" : "ok", l: pct(1 - taxa), w: alerta(taxa) ? t("aviso_baixo") : ""}) : t("frase_sem_cheque");
+  return `
+  <div class="barra">
+    <div class="nav"><button data-ir="">${t("voltar")}</button><button data-ir="job/${j.id}/editar">${t("editar_job")}</button></div>
+    <h2>${esc(j.nome)}</h2>
+    <div class="sub">${[j.cidade, j.sqft ? Number(j.sqft).toLocaleString("en-US") + " sq ft" : "", j.status === "aberto" ? t("em_and") : t("fechado")].filter(Boolean).map(esc).join(" · ")}</div>
+  </div>
+  <div class="conteudo">
+    ${avisos()}
+    <div class="kpis">
+      <div class="kpi"><small>${t("cheque_total")}</small><strong>${dinheiro(j.receita, false)}</strong><em class="pc">${j.receita ? "100%" : "—"}</em></div>
+      <div class="kpi desp"><small>${t("despesas")}</small><strong>${dinheiro(gasto, false)}</strong><em class="pc">${pc(gasto)}</em></div>
+      <div class="kpi sobra ${sobrou < 0 ? "neg" : ""}"><small>${t("sobrou")}</small><strong>${dinheiro(sobrou, false)}</strong><em class="pc">${pc(sobrou)}</em></div>
+    </div>
+    <div class="barras">
+      <div class="linha-barra"><span>${t("cheque")}</span><div class="trilho"><i style="width:${j.receita ? 100 : 0}%;background:var(--navy)"></i></div></div>
+      <div class="linha-barra"><span>${t("despesas")}</span><div class="trilho"><i style="width:${Math.min(taxa, 1) * 100}%;background:var(--red)"></i></div></div>
+      <div class="linha-barra"><span>${t("sobrou")}</span><div class="trilho"><i style="width:${Math.max(0, 1 - taxa) * 100}%;background:var(--azul)"></i></div></div>
+      <p class="frase" style="margin-top:8px">${frase}</p>
+    </div>
+    <button class="botao-grande" data-ir="job/${j.id}/despesa">${t("btn_desp")}</button>
+    ${blocoTruck(j, truck)}${blocoSqft(j, gasto, sobrou)}${blocoHoras(j, sobrou, itens)}
+    ${gasto ? `<div class="rosca">${rosca(fatias, Math.max(valorJob, gasto), valorJob, j.receita ? t("rosca_txt") : t("rosca_desp"))}<div class="itens">${legenda}</div></div>` : `<div class="vazio">${t("vazio_desp")}</div>`}
+    ${ds.length ? `<div class="titulo-sec"><h3>${t("tit_desp_job")}</h3><span>${tn("lanc", ds.length)}</span></div><p class="fonte" style="margin-top:-8px">${t("swipe_dica")}</p><div>${lista}</div>
+    <a class="exportar" href="/api/exportar?job=${j.id}&lang=${LANG}" download>${t("exp_job")}</a>` : ""}
+    <p class="fonte">${t("fonte")}${S.atualizado ? t("atualizado", {d: quando(S.atualizado)}) : ""}</p>
+  </div>`;
+}
+function blocoTruck(j, tk) {
+  if (!j.milhas) return `<div class="bloco"><div class="titulo-sec"><h3>${t("truck_tit")}</h3></div><p class="fonte">${t("truck_sem")}</p></div>`;
+  const linha = (rot, v) => `<div class="tlin"><span>${rot}</span><b>${dinheiro(v)}</b></div>`;
+  const proprios = ["dono", "work"].filter(k => S.config.veiculos[k].gasolina).map(k => t(k === "dono" ? "n_dono" : "n_work") + precoGal(S.config.veiculos[k].gasolina)).join(", ");
+  const dataGas = S.config.gasolina_data ? " (" + dataLonga(S.config.gasolina_data) + ")" : "";
+  return `<div class="bloco">
+    <div class="titulo-sec"><h3>${t("truck_tit")}</h3><span>${t("truck_ida", {m: j.milhas})}</span></div>
+    ${linha(t("truck_dono", {n: j.idas_dono || 0, mi: j.milhas * 2, tot: tk.miD}), tk.dono)}
+    ${linha(t("truck_work", {n: j.dias_work || 0, mi: j.milhas * 2, tot: tk.miW}), tk.work)}
+    <div class="tlin total"><span>${t("truck_total", {mi: tk.miD + tk.miW})}</span><b>${dinheiro(tk.total)}</b></div>
+    ${tk.faltaConfig ? `<div class="aviso">${t("truck_falta")}<button data-ir="setup/base" style="text-decoration:underline">${t("abrir_cfg")}</button></div>` : ""}
+    <p class="fonte">${t("truck_fonte", {p: precoGal(S.config.gasolina), d: dataGas, o: proprios ? t("truck_proprio", {l: proprios}) : ""})}</p>
+  </div>`;
+}
+function blocoSqft(j, gasto, sobrou) {
+  if (!j.sqft) return `<div class="bloco"><div class="titulo-sec"><h3>${t("sqft_tit")}</h3></div><p class="fonte">${t("sqft_sem")}</p></div>`;
+  return `<div class="bloco">
+    <div class="titulo-sec"><h3>${t("sqft_tit")}</h3><span>${Number(j.sqft).toLocaleString("en-US")} sq ft</span></div>
+    <div class="sqft">
+      <div><small>${t("price")}</small><b>${dinheiro(j.receita / j.sqft)}</b><em class="pc">${j.receita ? "100%" : "—"}</em><em>${t("por_sqft")}</em></div>
+      <div><small>${t("custo")}</small><b class="r">${dinheiro(gasto / j.sqft)}</b><em class="pc">${j.receita ? pct(gasto / j.receita) : "—"}</em><em>${t("por_sqft")}</em></div>
+      <div class="l ${sobrou < 0 ? "neg" : ""}"><small>${t("lucro")}</small><b>${dinheiro(sobrou / j.sqft)}</b><em class="pc">${j.receita ? pct(sobrou / j.receita) : "—"}</em><em>${t("por_sqft")}</em></div>
+    </div>
+    <p class="fonte">${t("sqft_dica")}</p>
+  </div>`;
+}
+function blocoHoras(j, sobrou, itens) {
+  const h = horasTot(j);
+  if (!h) return `<div class="bloco"><div class="titulo-sec"><h3>${t("h_titulo")}</h3></div><p class="fonte">${t("h_sem")}</p></div>`;
+  const labor = (itens.find(([n]) => n === "Labor") || [0, 0])[1];
+  const per = j.data_inicio && j.data_fim ? `${dataLonga(j.data_inicio)} → ${dataLonga(j.data_fim)}` : "";
+  const met = (rot, v, sub, cls = "") => `<div class="met ${cls}"><small>${rot}</small><b>${v}</b><em>${sub}</em></div>`;
+  return `<div class="bloco">
+    <div class="titulo-sec"><h3>${t("h_titulo")}</h3><span>${per}</span></div>
+    <div class="grade2">${met(t("met_horas"), fmtH(h) + " h", t("met_horas_sub", {d: j.dias_trabalhados, h: fmtH(j.horas_dia), p: j.pessoas}), "destaque")}${met(t("met_equipe"), eq(j.pessoas), t("met_h_dia", {h: fmtH(j.horas_dia)}))}</div>
+    ${j.sqft ? `<p class="secao-t" style="margin-top:6px">${t("met_sq")}</p><div class="grade2">${met(t("met_hsq"), numFmt(h / j.sqft, 3) + " h", `${fmtH(h)} h ÷ ${Number(j.sqft).toLocaleString("en-US")} sq ft`)}${met(t("met_sqh"), numFmt(j.sqft / h, 1) + " sq ft", `${Number(j.sqft).toLocaleString("en-US")} ÷ ${fmtH(h)} h`)}</div>` : ""}
+    ${j.receita ? `<p class="secao-t" style="margin-top:6px">${t("met_din")}</p><div class="grade2">${met(t("met_price_h"), dinheiro(j.receita / h), `${dinheiro(j.receita, false)} ÷ ${fmtH(h)} h`)}${met(t("met_labor_h"), labor ? dinheiro(labor / h) : "—", labor ? `${dinheiro(labor, false)} ÷ ${fmtH(h)} h` : "", "r")}</div>
+    ${met(t("met_lucro_h"), dinheiro(sobrou / h), `${dinheiro(sobrou, false)} ÷ ${fmtH(h)} h`, "destaque")}` : ""}
+    <p class="fonte">${t("met_fonte")}${S.atualizado ? t("atualizado", {d: quando(S.atualizado)}) : ""}</p>
+  </div>`;
+}
+function telaNaoAchei() {
+  return `<div class="barra"><div class="nav"><button data-ir="">${t("voltar")}</button><span></span></div><h2>${t("nao_achei_t")}</h2></div>
+  <div class="conteudo">${avisos()}<div class="vazio">${t("nao_achei_d")}</div></div>`;
+}
+
+// ---------- tela 3: nova despesa ----------
+function telaDespesa(jobId, lancId) {
+  const j = S.jobs.find(x => x.id === jobId);
+  if (!j) return telaNaoAchei();
+  if (!form || form.tipo !== "despesa") {
+    const l = lancId && S.lancamentos.find(x => x.id === lancId);
+    form = l ? {tipo: "despesa", id: l.id, existente: true, valor: l.valor.toFixed(2), item: l.item, itemManual: true, descricao: l.descricao || "", loja: l.loja || "", data: l.data, fotoUrl: l.foto ? fotoSrc(l.foto, true) : null, extras: []}
+             : {tipo: "despesa", id: novoId(), existente: false, valor: "", item: null, itemManual: false, descricao: "", loja: "", data: hojeISO(), foto: null, extras: [], leitura: null};
+  }
+  const f = form;
+  const img = f.foto || f.fotoUrl;
+  const tag = f.leitura === "lendo" ? `<span class="tag">${t("lendo")}</span>` : f.leitura === "ok" ? `<span class="tag ok">${t("lido")}</span>` : f.leitura === "falhou" ? `<span class="tag ruim">${t("digite")}</span>` : "";
+  const chips = todosItens().map(n => `<button class="chip ${f.item === n ? "on" : ""}" data-item="${esc(n)}">${esc(disp(n))}</button>`).join("");
+  return `
+  <div class="barra">
+    <div class="nav"><button data-ir="job/${j.id}">${t("cancelar")}</button><span>${dataLonga(f.data)}</span></div>
+    <h2>${f.existente ? t("edit_desp") : t("nova_desp")}</h2>
+    <div class="sub">${t("job_lbl", {n: esc(j.nome)})}</div>
+  </div>
+  <div class="conteudo">
+    ${avisos()}
+    <div class="foto">
+      ${img ? `<img src="${img}" alt="${t("alt_foto")}"><div class="trocar-box"><button class="trocar" id="tirar">${t("trocar_foto")}</button><button class="trocar" id="album">${t("trocar_album")}</button></div>`
+            : `<div class="dois"><button class="tirar" id="tirar"><span>📷</span>${t("tirar_foto")}</button><button class="tirar" id="album"><span>🖼</span>${t("album")}</button></div>`}
+      ${f.leitura === "lendo" ? `<div class="lendo">${t("lendo_rec")}</div>` : ""}
+    </div>
+    <p class="dica" style="text-align:left;margin-top:-6px">${t("foto_uma")}</p>
+    <div class="mic">
+      <button id="falar" aria-label="${t("falar_aria")}"><svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-2.08A7 7 0 0 0 19 12h-2Z"/></svg></button>
+      <div class="txt"><small id="mic-rotulo">${f.descricao ? t("voce_falou") : t("toque_fale")}</small>
+        <textarea id="descricao" rows="2" placeholder="${t("ph_desc")}">${esc(f.descricao)}</textarea></div>
+    </div>
+    <p class="dica-mic" id="dica-mic" hidden>${t("dica_mic")}</p>
+    <div class="dupla">
+      <label class="campo"><small>${t("valor")}</small><div class="linha"><input id="valor" inputmode="decimal" placeholder="$0.00" value="${esc(f.valor)}" autocomplete="off">${tag}</div></label>
+      <label class="campo"><small>${t("data")}</small><input id="data" type="date" value="${esc(f.data)}"></label>
+    </div>
+    ${f.loja ? `<p class="fonte">${t("loja", {l: esc(f.loja)})}</p>` : ""}
+    <div class="campo"><small>${t("item")}${f.itemManual ? "" : t("item_auto")}</small>
+      <div class="chips">${chips}<button class="chip mais" id="novo-item">${t("novo_item")}</button></div></div>
+    <p class="dica">${t("dica_sem_foto")}</p>
+    <button class="salvar" id="salvar-despesa">${t("salvar_desp")}</button>
+    ${f.existente ? `<button class="excluir" id="excluir">${t("excluir_desp")}</button>` : ""}
+  </div>`;
+}
+
+async function comprimir(arquivo) {
+  const url = URL.createObjectURL(arquivo);
+  try {
+    const img = await new Promise((ok, erro) => { const i = new Image(); i.onload = () => ok(i); i.onerror = erro; i.src = url; });
+    const max = 1600, k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+    const c = document.createElement("canvas"); c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    return c.toDataURL("image/jpeg", 0.82);
+  } finally { URL.revokeObjectURL(url); }
+}
+
+async function fotoEscolhida(arquivo) {
+  if (!arquivo || !form) return;
+  form.foto = await comprimir(arquivo); form.fotoUrl = null; form.leitura = "lendo"; render();
+  try {
+    const r = await api("/api/ler-recibo", {foto: form.foto});
+    if (!form) return;
+    if (r.valor) { form.valor = r.valor.toFixed(2); form.leitura = "ok"; } else form.leitura = "falhou";
+    if (r.loja) form.loja = r.loja;
+    if (!form.itemManual) form.item = adivinhar(form.descricao + " " + form.loja) || form.item;
+  } catch { if (form) form.leitura = "falhou"; }
+  render();
+}
+
+let reconhecedor = null;
+function falar() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const caixa = document.getElementById("descricao");
+  const dica = () => { document.getElementById("dica-mic").hidden = false; caixa.focus(); };
+  if (!SR) return dica();
+  if (reconhecedor) { reconhecedor.stop(); return; }
+  try {
+    reconhecedor = new SR(); reconhecedor.lang = LANGS[LANG].fala; reconhecedor.interimResults = true; reconhecedor.continuous = false;
+    const botao = document.getElementById("falar"); botao.classList.add("ouvindo");
+    document.getElementById("mic-rotulo").textContent = t("ouvindo");
+    reconhecedor.onresult = e => {
+      const texto = [...e.results].map(r => r[0].transcript).join(" ");
+      caixa.value = texto; form.descricao = texto; document.getElementById("mic-rotulo").textContent = t("voce_falou");
+      if (!form.itemManual) atualizarItem();
+    };
+    reconhecedor.onerror = () => { reconhecedor = null; botao.classList.remove("ouvindo"); dica(); };
+    reconhecedor.onend = () => { reconhecedor = null; botao.classList.remove("ouvindo"); };
+    reconhecedor.start();
+  } catch { reconhecedor = null; dica(); }
+}
+function atualizarItem() {
+  const novo = adivinhar(form.descricao + " " + form.loja);
+  if (novo && novo !== form.item) {
+    form.item = novo;
+    document.querySelectorAll("[data-item]").forEach(c => c.classList.toggle("on", c.dataset.item === novo));
+  }
+}
+
+async function salvarDespesa(jobId) {
+  const f = form;
+  f.descricao = document.getElementById("descricao").value.trim();
+  f.valor = document.getElementById("valor").value; f.data = document.getElementById("data").value || hojeISO();
+  if (!numero(f.valor)) return toast(t("t_valor"));
+  if (!f.item) f.item = adivinhar(f.descricao + " " + f.loja) || "Outros";
+  const corpo = {id: f.id, job_id: jobId, valor: numero(f.valor), item: f.item, descricao: f.descricao, loja: f.loja, data: f.data};
+  if (f.foto) corpo.foto = f.foto;
+  const botao = document.getElementById("salvar-despesa"); botao.disabled = true; botao.textContent = t("salvando");
+  try { await api("/api/lancamento", corpo); await carregar(); toast(t("t_salva", {v: dinheiro(corpo.valor), i: disp(corpo.item)})); }
+  catch (e) {
+    if (e.http) { botao.disabled = false; botao.textContent = t("salvar_desp"); return toast(t("t_nao", {m: e.message})); }
+    const fila = lerFila(); fila.push({caminho: "/api/lancamento", corpo});
+    if (!gravarFila(fila)) { botao.disabled = false; botao.textContent = t("salvar_desp"); return toast(t("t_sem_espaco")); }
+    S.pendentes = fila; toast(t("t_guardado"));
+  }
+  ir("job/" + jobId);
+}
+
+// ---------- tela 4: novo job / editar job ----------
+function telaJobForm(id) {
+  const j = id && S.jobs.find(x => x.id === id);
+  if (id && !j) return telaNaoAchei();
+  if (!form || form.tipo !== "job") form = j ? {tipo: "job", id: j.id, nome: j.nome, cidade: j.cidade || "", receita: j.receita ? j.receita.toFixed(2) : "", status: j.status, sqft: j.sqft || "", endereco: j.endereco || "", milhas: j.milhas || "", idas_dono: j.idas_dono ?? 4, dias_work: j.dias_work || 0, subcontrato: (S.lancamentos.find(l => l.id === "sub-" + j.id)?.valor || ""),
+                                                         data_inicio: j.data_inicio || "", data_fim: j.data_fim || "", dias_trab: j.dias_trabalhados || "", diasManual: !!j.dias_trabalhados, horas_dia: j.horas_dia ?? 8, pessoas: j.pessoas || 0, diasWorkAuto: !j.dias_work || j.dias_work === j.dias_trabalhados}
+                                         : {tipo: "job", id: novoId(), nome: "", cidade: "", receita: "", status: "aberto", sqft: "", endereco: "", milhas: "", idas_dono: 4, dias_work: 0, subcontrato: "",
+                                                         data_inicio: "", data_fim: "", dias_trab: "", diasManual: false, horas_dia: 8, pessoas: 0, diasWorkAuto: true};
+  const f = form;
+  const mapa = `https://maps.apple.com/?saddr=${encodeURIComponent(S.config.base)}&daddr=${encodeURIComponent((f.endereco || f.cidade || "") + (f.endereco && !/\bMA\b/i.test(f.endereco) ? ", MA" : ""))}&dirflg=d`;
+  const passo = (k, val, step = 1) => `<div class="stepper"><button data-passo="${k}" data-d="${-step}" aria-label="${t("aria_menos")}">−</button><b id="st-${k}">${val}</b><button data-passo="${k}" data-d="${step}" aria-label="${t("aria_mais")}">+</button></div>`;
+  const sug = diasSugeridos(f.data_inicio, f.data_fim);
+  return `
+  <div class="barra">
+    <div class="nav"><button data-ir="${j ? "job/" + j.id : ""}">${t("cancelar")}</button><span></span></div>
+    <h2>${j ? t("editar_job") : t("novo_job_t")}</h2>
+    <div class="sub">${j ? esc(j.nome) : t("crie_pasta")}</div>
+  </div>
+  <div class="conteudo">
+    ${avisos()}
+    <label class="campo"><small>${t("f_nome")}</small><input id="nome" placeholder="${t("ph_nome")}" value="${esc(f.nome)}" autocomplete="off"></label>
+    <label class="campo"><small>${t("f_cidade")}</small><input id="cidade" placeholder="${t("ph_cidade")}" value="${esc(f.cidade)}" autocomplete="off"></label>
+    <label class="campo"><small>${t("f_cheque")}</small><input id="receita" class="grande" inputmode="decimal" placeholder="$0" value="${esc(f.receita)}" autocomplete="off"></label>
+    <label class="campo novo-campo"><small>${t("f_sub")}</small><input id="subcontrato" class="grande" inputmode="decimal" placeholder="$0" value="${esc(f.subcontrato)}" autocomplete="off"></label>
+    <p class="dica" style="text-align:left;margin-top:-6px">${t("sub_dica")}</p>
+    <label class="campo novo-campo"><small>${t("f_end")}</small><input id="endereco" placeholder="${t("ph_end")}" value="${esc(f.endereco)}" autocomplete="off"></label>
+    <label class="campo novo-campo"><small>${t("f_sqft")}</small><input id="sqft" inputmode="numeric" placeholder="${t("ph_sqft")}" value="${esc(f.sqft)}" autocomplete="off"></label>
+    <div id="sq-box"></div>
+    <div class="campo novo-campo"><small>${t("f_milhas")}</small>
+      <div class="linha"><input id="milhas" inputmode="decimal" placeholder="${t("ph_milhas")}" value="${esc(f.milhas)}" autocomplete="off"><a class="mapa" id="ver-mapa" href="${mapa}" target="_blank" rel="noopener">${t("ver_mapa")}</a></div></div>
+    <div class="dupla">
+      <div class="campo novo-campo"><small>${t("f_idas")}</small>${passo("idas_dono", f.idas_dono)}</div>
+      <div class="campo novo-campo"><small>${t("f_dias")}</small>${passo("dias_work", f.dias_work)}</div>
+    </div>
+    <p class="secao-t">${t("h_titulo")}</p>
+    <div class="dupla">
+      <label class="campo novo-campo"><small>${t("f_ini")}</small><input id="data_inicio" type="date" value="${esc(f.data_inicio)}"></label>
+      <label class="campo novo-campo"><small>${t("f_fim")}</small><input id="data_fim" type="date" value="${esc(f.data_fim)}"></label>
+    </div>
+    <div class="campo novo-campo"><small>${t("f_dias_trab")}</small><div class="linha"><input id="dias_trab" inputmode="numeric" placeholder="0" value="${esc(f.dias_trab)}" autocomplete="off"><span class="tag ok" id="dias-tag" ${sug != null && sug === numero(f.dias_trab) ? "" : "hidden"}>${t("dias_sug")}</span></div></div>
+    <div class="dupla">
+      <div class="campo novo-campo"><small>${t("f_horas_dia")}</small>${passo("horas_dia", f.horas_dia, 0.5)}</div>
+      <div class="campo novo-campo"><small>${t("f_pessoas")}</small>${passo("pessoas", f.pessoas)}</div>
+    </div>
+    <div class="calc-linha" id="h-calc">${calcHoras()}</div>
+    <p class="dica" style="text-align:left">${t("h_work_dica")}</p>
+    <div class="campo"><small>${t("f_sit")}</small>
+      <div class="chips"><button class="chip ${f.status === "aberto" ? "on" : ""}" data-status="aberto">${t("em_and")}</button><button class="chip ${f.status === "fechado" ? "on" : ""}" data-status="fechado">${t("fechado")}</button></div></div>
+    <p class="dica">${t("dica_job")}</p>
+    <button class="salvar" id="salvar-job">${j ? t("salvar_job") : t("criar_job")}</button>
+  </div>`;
+}
+function calcHoras() {
+  const d = numero(form.dias_trab), h = Number(form.horas_dia) || 0, p = Number(form.pessoas) || 0;
+  return t("h_calc", {d, h: fmtH(h), p, t: fmtH(d * h * p)});
+}
+function atualizarHoras() {
+  lerJobForm();
+  const sug = diasSugeridos(form.data_inicio, form.data_fim);
+  if (!form.diasManual && sug != null) { form.dias_trab = String(sug); const el = document.getElementById("dias_trab"); if (el) el.value = form.dias_trab; }
+  const d = numero(form.dias_trab);
+  if (form.diasWorkAuto) { form.dias_work = d; const el = document.getElementById("st-dias_work"); if (el) el.textContent = d; }
+  const c = document.getElementById("h-calc"); if (c) c.innerHTML = calcHoras();
+  const tag = document.getElementById("dias-tag"); if (tag) tag.hidden = !(sug != null && d === sug);
+}
+function lerJobForm() { ["nome", "cidade", "receita", "subcontrato", "sqft", "endereco", "milhas", "data_inicio", "data_fim", "dias_trab"].forEach(k => { const el = document.getElementById(k); if (el) form[k] = el.value; }); }
+function sqBoxHtml() {
+  const q = form.sq;
+  const botao = (rot) => `<button class="mapa" id="sq-buscar" type="button" style="align-self:flex-start">${rot}</button>`;
+  if (!q) return `<div class="bloco">${botao(t("sq_buscar"))}<p class="fonte">${t("sq_priv")}</p></div>`;
+  if (q.estado === "buscando") return `<div class="bloco"><p class="fonte">${t("sq_buscando")}</p></div>`;
+  let casa;
+  if (q.estado === "nao") casa = `<p class="fonte">${t({endereco: "sq_m_endereco", parcela: "sq_m_parcela", sem_area: "sq_m_sem"}[q.motivo] || "sq_m_rede")}</p>`;
+  else {
+    const det = [q.uso, q.ano ? t("sq_ano", {a: q.ano}) : "", q.andares ? tn("sq_and", Number(q.andares) || 2) : ""].filter(Boolean).map(esc).join(" · ");
+    const atual = numero(form.sqft);
+    const chip = (k, n) => n ? `<button class="chip ${atual === n ? "on" : ""}" type="button" data-sq="${n}">${t(k, {n: n.toLocaleString("en-US")})}</button>` : "";
+    const chips = q.sq_moradia === q.sq_total ? chip("sq_moradia", q.sq_moradia) : chip("sq_moradia", q.sq_moradia) + chip("sq_total", q.sq_total);
+    casa = `<p class="frase">${t("sq_achou", {a: esc(q.endereco_oficial + (q.cidade ? " (" + q.cidade + ")" : ""))})}</p><p class="fonte">${det}</p>
+      ${q.confere === false ? `<div class="aviso">${t("sq_confira")}</div>` : ""}
+      <div class="chips">${chips}</div><p class="fonte">${t("sq_fonte", {fy: q.fy || "?"})}</p>`;
+  }
+  const dec = n => LANG === "en" ? String(n) : String(n).replace(".", ",");
+  const dist = q.milhas_estimadas != null ? `<p class="fonte" style="margin-top:4px">${t("mi_sug", {m: dec(q.milhas_estimadas), r: dec(q.milhas_reta), f: LANG === "en" ? "1.3" : "1,3"})}</p>
+      <div class="chips"><button class="chip ${numero(String(form.milhas).replace(",", ".")) === q.milhas_estimadas ? "on" : ""}" type="button" data-mi="${q.milhas_estimadas}">${t("mi_usar", {m: dec(q.milhas_estimadas)})}</button></div>` : "";
+  return `<div class="bloco">${casa}${dist}${botao(t("sq_novo"))}</div>`;
+}
+function pintarSq() {
+  const box = document.getElementById("sq-box"); if (!box || !form || form.tipo !== "job") return;
+  box.innerHTML = sqBoxHtml();
+  document.getElementById("sq-buscar")?.addEventListener("click", () => buscarSqft(false));
+  box.querySelectorAll("[data-sq]").forEach(c => c.addEventListener("click", () => { form.sqft = c.dataset.sq; document.getElementById("sqft").value = form.sqft; pintarSq(); }));
+  box.querySelectorAll("[data-mi]").forEach(c => c.addEventListener("click", () => { form.milhas = c.dataset.mi; document.getElementById("milhas").value = form.milhas; pintarSq(); }));
+}
+async function buscarSqft(auto) {
+  lerJobForm();
+  if (!form.endereco.trim()) { if (!auto) toast(t("sq_falta_end")); return; }
+  const meu = form; form.sq = {estado: "buscando"}; form.sqEnd = form.endereco; pintarSq();
+  try {
+    const r = await api("/api/sqft?endereco=" + encodeURIComponent(form.endereco) + "&cidade=" + encodeURIComponent(form.cidade));
+    if (form !== meu) return;
+    form.sq = {estado: r.achou ? "achou" : "nao", ...r};
+    if (r.achou && !numero(form.sqft)) { form.sqft = String(r.sq_moradia || r.sq_total); const el = document.getElementById("sqft"); if (el) el.value = form.sqft; }
+    if (r.milhas_estimadas != null && !numero(String(form.milhas).replace(",", "."))) { form.milhas = String(r.milhas_estimadas); const el = document.getElementById("milhas"); if (el) el.value = form.milhas; }
+  } catch { if (form === meu) form.sq = {estado: "nao", motivo: "rede"}; }
+  pintarSq();
+}
+async function salvarJob() {
+  lerJobForm();
+  if (!form.nome.trim()) return toast(t("t_nome"));
+  const botao = document.getElementById("salvar-job"); botao.disabled = true;
+  try {
+    const job = await api("/api/job", {id: form.id, nome: form.nome, cidade: form.cidade, receita: numero(form.receita), status: form.status, sqft: numero(form.sqft), endereco: form.endereco, milhas: numero(String(form.milhas).replace(",", ".")), idas_dono: form.idas_dono, dias_work: form.dias_work, subcontrato: numero(form.subcontrato),
+      data_inicio: form.data_inicio, data_fim: form.data_fim, dias_trabalhados: numero(form.dias_trab), horas_dia: form.horas_dia, pessoas: form.pessoas});
+    await carregar(); toast(t("t_job")); ir("job/" + job.id);
+  } catch (e) { botao.disabled = false; toast(e.http ? t("t_nao", {m: e.message}) : t("t_sem_job")); }
+}
+
+// ---------- instalação, entrar e Setup ----------
+const RE_EMAIL = /^[^@\s]{1,64}@[^@\s]{1,200}\.[^@\s]{2,}$/;
+const chipsIdioma = () => Object.entries(LANGS).map(([k, L]) => `<button class="chip ${LANG === k ? "on" : ""}" type="button" data-lang-chip="${k}">${L.bandeira} ${L.curto}</button>`).join("");
+const cabecalho = (titulo, sub, voltar) => `<div class="barra"><div class="nav">${voltar ? `<button data-ir="${voltar}">${t("voltar_setup")}</button>` : `<span>${esc(nomeEmp())}</span>`}<span></span></div><h2>${titulo}</h2><div class="sub">${sub}</div></div>`;
+
+async function lerEstado() {
+  try {
+    S.estado = LOCAL ? await window.RD_LOCAL("/api/estado") : await (await fetch("/api/estado", {cache: "no-store"})).json();
+    if (S.estado.empresa) S.config = {...S.config, empresa: S.estado.empresa};
+    try { localStorage.setItem("rd-logado", S.estado.logado ? "1" : ""); } catch {}
+  } catch { // sem conexão com o Mac: se já tinha entrado antes, segue com os dados guardados no aparelho
+    let lg = false; try { lg = localStorage.getItem("rd-logado") === "1"; } catch {}
+    S.estado = {instalado: true, logado: lg, empresa: S.config.empresa, offline: true};
+  }
+}
+function limparLocal() { try { ["rd-cache", "rd-pendentes", "rd-logado"].forEach(k => localStorage.removeItem(k)); } catch {} S.jobs = []; S.lancamentos = []; S.pendentes = []; S.config = CONFIG_VAZIA; S.atualizado = null; }
+
+// ----- 1. instalação (só na primeira vez; só no próprio Mac) -----
+function validarInstalar(f) {
+  if (!f.nome.trim() || !RE_EMAIL.test(f.email.trim())) return {ok: false, msg: "", erro: false};
+  if (f.senha && f.senha.length < 8) return {ok: false, msg: t("senha_curta"), erro: true};
+  if (f.senha.length < 8) return {ok: false, msg: "", erro: false};
+  if (f.senha !== f.senha2) return {ok: false, msg: f.senha2 ? t("senhas_dif") : "", erro: !!f.senha2};
+  return {ok: f.aceito, msg: t("senhas_ok"), erro: false};
+}
+function telaInstalar() {
+  if (!S.estado.pode_instalar) return `${cabecalho(t("inst_t"), t("inst_sub"))}<div class="conteudo"><div class="aviso">${t("so_no_mac")}</div></div>`;
+  if (!form || form.tipo !== "instalar") form = {tipo: "instalar", nome: S.estado.empresa.nome || "", email: "", senha: "", senha2: "", aceito: false};
+  const f = form;
+  return `${cabecalho(t("inst_t"), t("inst_sub"))}
+  <form class="conteudo" id="f-instalar" novalidate>
+    ${S.estado.tem_dados ? `<div class="aviso">${t("inst_exist")}</div>` : ""}
+    <label class="campo novo-campo"><small>${t("f_inst_nome")}</small><input id="i-nome" value="${esc(f.nome)}" autocomplete="organization"></label>
+    <label class="campo novo-campo"><small>${t("f_email")}</small><input id="i-email" type="email" inputmode="email" placeholder="${t("ph_email")}" value="${esc(f.email)}" autocomplete="email" autocapitalize="off"></label>
+    <label class="campo novo-campo"><small>${t("f_senha1")}</small><input id="i-senha" type="password" value="${esc(f.senha)}" autocomplete="new-password"></label>
+    <label class="campo novo-campo"><small>${t("f_senha2")}</small><input id="i-senha2" type="password" value="${esc(f.senha2)}" autocomplete="new-password"></label>
+    <p class="fonte" id="i-msg" style="min-height:16px"></p>
+    <div class="campo"><small>${t("cfg_idioma")}</small><div class="chips">${chipsIdioma()}</div></div>
+    <div class="promessa">${t("promessa")}</div>
+    <label class="check"><input type="checkbox" id="i-ok" ${f.aceito ? "checked" : ""}><span>${t("entendi")}</span></label>
+    <button class="salvar" id="i-btn" type="submit" disabled>${t("btn_instalar")}</button>
+  </form>`;
+}
+function pintarInstalar() {
+  const v = validarInstalar(form), m = document.getElementById("i-msg");
+  m.textContent = v.msg; m.style.color = v.erro ? "var(--red)" : "#2F6F8F";
+  document.getElementById("i-btn").disabled = !v.ok;
+}
+function ligarInstalar() {
+  if (!S.estado.pode_instalar) return;
+  const ler = () => { form.nome = document.getElementById("i-nome").value; form.email = document.getElementById("i-email").value; form.senha = document.getElementById("i-senha").value; form.senha2 = document.getElementById("i-senha2").value; form.aceito = document.getElementById("i-ok").checked; };
+  ["i-nome", "i-email", "i-senha", "i-senha2", "i-ok"].forEach(id => document.getElementById(id).addEventListener("input", () => { ler(); pintarInstalar(); }));
+  document.querySelectorAll("[data-lang-chip]").forEach(b => b.addEventListener("click", () => { ler(); setLang(b.dataset.langChip); render(); }));
+  pintarInstalar();
+  document.getElementById("f-instalar").addEventListener("submit", async e => {
+    e.preventDefault(); ler(); if (!validarInstalar(form).ok) return;
+    const botao = document.getElementById("i-btn"); botao.disabled = true;
+    try {
+      await api("/api/instalar", {nome: form.nome, email: form.email, senha: form.senha, senha2: form.senha2});
+      form = null; await lerEstado(); await carregar(); location.hash = "#/"; render();
+    } catch (er) { botao.disabled = false; toast(er.http ? er.message : t("t_sem_mac")); }
+  });
+}
+
+// ----- 2. entrar com a senha -----
+function telaEntrar() {
+  return `${cabecalho(t("app"), t("entrar_t"))}
+  <form class="conteudo" id="f-entrar">
+    <div class="logo-grande">${logoUrl() ? `<img src="${logoUrl()}" alt="">` : "🏢"}</div>
+    <p class="nome-grande">${esc(nomeEmp())}</p>
+    <label class="campo novo-campo"><small>${t("f_senha")}</small><input id="e-senha" type="password" autocomplete="current-password"></label>
+    <button class="salvar" type="submit" id="e-btn">${t("btn_entrar")}</button>
+    <p class="dica">${t("tent_dica")}</p>
+    <button class="btn-ghost" type="button" id="e-esqueci" style="color:var(--muted)">${t("esqueci")}</button>
+    <div class="calc-linha" id="e-esq-txt" hidden>${t("esqueci_txt")}${LOCAL ? `<br><input id="e-apagar" autocomplete="off" autocapitalize="characters" placeholder="APAGAR" style="margin-top:8px"><button class="btn-ghost perigo" id="e-apagar-btn" type="button" style="margin-top:6px">${t("a_btn")}</button>` : ""}</div>
+  </form>`;
+}
+function ligarEntrar() {
+  document.getElementById("e-esqueci").addEventListener("click", () => { document.getElementById("e-esq-txt").hidden = false; });
+  if (LOCAL) document.getElementById("e-apagar-btn").addEventListener("click", async () => {
+    try { await window.RD_LOCAL.apagarSemSenha(document.getElementById("e-apagar").value); limparLocal(); form = null; await lerEstado(); location.hash = "#/"; render(); toast(t("t_apagado")); }
+    catch (e) { toast(erroSrv(e.message) || e.message); }
+  });
+  document.getElementById("f-entrar").addEventListener("submit", async e => {
+    e.preventDefault();
+    const botao = document.getElementById("e-btn"), campo = document.getElementById("e-senha"); botao.disabled = true;
+    try {
+      await api("/api/entrar", {senha: campo.value});
+      await lerEstado(); await carregar(); location.hash = "#/"; render(); await enviarFila();
+    } catch (er) { botao.disabled = false; campo.value = ""; campo.focus(); toast(er.http ? er.message : t("t_sem_mac")); }
+  });
+}
+
+// ----- 3. Setup: menu e telas -----
+function telaSetup(sub) {
+  if (sub === "empresa") return telaSetupEmpresa();
+  if (sub === "idioma") return telaSetupIdioma();
+  if (sub === "senha") return telaSetupSenha();
+  if (sub === "base") return telaSetupBase();
+  if (sub === "exportar") return telaSetupExportar();
+  if (sub === "apagar") return telaSetupApagar();
+  const it = (ic, tit, sub2, rota, extra = "") => `<button class="menu-item ${extra}" ${rota ? `data-ir="${rota}"` : ""} type="button"><div class="ic">${ic}</div><div><b>${tit}</b><small>${sub2}</small></div><span class="seta2">›</span></button>`;
+  return `<div class="barra"><div class="nav"><button data-ir="">${t("voltar")}</button><span></span></div><h2>${t("setup_t")}</h2><div class="sub">${esc(nomeEmp())}</div></div>
+  <div class="conteudo">${avisos()}
+    <div class="menu-lista">
+      ${it("🏢", t("m_emp"), esc(nomeEmp()), "setup/empresa")}
+      ${it("🌐", t("cfg_idioma"), LANGS[LANG].nome, "setup/idioma")}
+      ${it("🔐", t("m_senha"), t("m_senha_s"), "setup/senha")}
+      ${it("🛻", t("cfg_base_t"), t("m_base_s"), "setup/base")}
+      ${it("📤", t("m_exp"), t("m_exp_s"), "setup/exportar")}
+      ${it("🔒", t("m_sair"), t("m_sair_s"), "", "")}
+      ${it("⚠️", t("m_apagar"), t("m_apagar_s"), "setup/apagar", "perigo")}
+    </div>
+  </div>`;
+}
+function ligarSetupMenu() {
+  const itens = [...document.querySelectorAll(".menu-item")];
+  const sair = itens.find(b => !b.dataset.ir);
+  if (sair) sair.addEventListener("click", async () => {
+    try { await api("/api/sair", {}); } catch {}
+    try { ["rd-cache", "rd-logado"].forEach(k => localStorage.removeItem(k)); } catch {}
+    S.jobs = []; S.lancamentos = []; S.estado = {...S.estado, logado: false}; location.hash = "#/"; render();
+  });
+}
+
+function logoHtmlPrev() { return logoUrl() ? `<img src="${logoUrl()}" alt="">` : "🏢"; }
+function telaSetupEmpresa() {
+  if (!form || form.tipo !== "empresa") form = {tipo: "empresa", nome: nomeEmp()};
+  return `${cabecalho(t("m_emp"), t("m_emp_s"), "setup")}
+  <div class="conteudo">${avisos()}
+    <label class="campo novo-campo"><small>${t("emp_nome")}</small><input id="emp-nome" value="${esc(form.nome)}" autocomplete="organization"></label>
+    <button class="salvar" id="emp-salvar" type="button" style="margin-top:0">${t("emp_salvar")}</button>
+    <div class="campo novo-campo"><small>${t("emp_logo")}</small>
+      <div class="logo-linha"><div class="logo-prev">${logoHtmlPrev()}</div>
+        <div class="logo-acoes"><button class="btn-peq" id="logo-album" type="button">${t("emp_album")}</button><button class="btn-peq" id="logo-cam" type="button">${t("emp_foto")}</button><button class="btn-peq rm" id="logo-rm" type="button" ${logoUrl() ? "" : "hidden"}>${t("emp_rm")}</button></div></div></div>
+    <p class="secao-t">${t("emp_como")}</p>
+    <div class="topo-prev"><div class="l">${logoHtmlPrev()}</div><div><b id="prev-nome">${esc(form.nome)}</b><small>${t("app")}</small></div></div>
+    <div class="calc-linha">${t("emp_dica")}</div>
+    <p class="dica" style="text-align:left">${t("emp_priv")}</p>
+  </div>`;
+}
+async function logoEscolhido(arq) {
+  if (!arq) return;
+  try {
+    const campo = document.getElementById("emp-nome"); if (campo && form) form.nome = campo.value;
+    const url = URL.createObjectURL(arq);
+    const img = await new Promise((ok, erro) => { const i = new Image(); i.onload = () => ok(i); i.onerror = erro; i.src = url; });
+    const k = Math.min(1, 512 / Math.max(img.naturalWidth, img.naturalHeight));
+    const c = document.createElement("canvas"); c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+    const emp = await api("/api/logo", {foto: c.toDataURL("image/png")});
+    S.config.empresa = {...S.config.empresa, ...emp}; toast(t("t_logo")); render();
+  } catch (e) { toast(t("t_nao", {m: e.message || t("e_img")})); }
+}
+
+function telaSetupIdioma() {
+  return `${cabecalho(t("cfg_idioma"), LANGS[LANG].nome, "setup")}
+  <div class="conteudo"><div class="campo novo-campo"><small>${t("cfg_idioma")}</small><div class="chips">${chipsIdioma()}</div></div>
+    <p class="dica" style="text-align:left">${t("cfg_idioma_dica")}</p></div>`;
+}
+
+function telaSetupSenha() {
+  if (!form || form.tipo !== "senha") form = {tipo: "senha"};
+  return `${cabecalho(t("m_senha"), t("m_senha_s"), "setup")}
+  <div class="conteudo">${avisos()}
+    <p class="secao-t">${t("s_email_t")}</p>
+    <label class="campo novo-campo"><small>${t("f_email")}</small><input id="s-email" type="email" inputmode="email" value="${esc(S.estado.email || "")}" autocomplete="email" autocapitalize="off"></label>
+    <label class="campo novo-campo"><small>${t("s_atual")}</small><input id="s-email-senha" type="password" autocomplete="current-password"></label>
+    <p class="dica" style="text-align:left">${t("s_email_dica")}</p>
+    <button class="salvar" id="s-btn-email" type="button" style="margin-top:0">${t("btn_trocar_email")}</button>
+    <p class="secao-t">${t("m_senha")}</p>
+    <label class="campo novo-campo"><small>${t("s_atual")}</small><input id="s-atual" type="password" autocomplete="current-password"></label>
+    <label class="campo novo-campo"><small>${t("s_nova")}</small><input id="s-nova" type="password" autocomplete="new-password"></label>
+    <label class="campo novo-campo"><small>${t("s_nova2")}</small><input id="s-nova2" type="password" autocomplete="new-password"></label>
+    <p class="fonte" id="s-msg" style="min-height:16px"></p>
+    <button class="salvar" id="s-btn-senha" type="button" disabled>${t("btn_trocar_senha")}</button>
+  </div>`;
+}
+function ligarSetupSenha() {
+  const v = id => document.getElementById(id).value;
+  const pintar = () => {
+    const a = v("s-nova"), b = v("s-nova2"); let msg = "", ok = false, erro = false;
+    if (a && a.length < 8) { msg = t("senha_curta"); erro = true; }
+    else if (a.length >= 8 && b && a !== b) { msg = t("senhas_dif"); erro = true; }
+    else if (a.length >= 8 && a === b) { msg = t("senhas_ok"); ok = !!v("s-atual"); }
+    const m = document.getElementById("s-msg"); m.textContent = msg; m.style.color = erro ? "var(--red)" : "#2F6F8F";
+    document.getElementById("s-btn-senha").disabled = !ok;
+  };
+  ["s-atual", "s-nova", "s-nova2"].forEach(id => document.getElementById(id).addEventListener("input", pintar));
+  document.getElementById("s-btn-senha").addEventListener("click", async () => {
+    try { await api("/api/senha", {atual: v("s-atual"), nova: v("s-nova"), nova2: v("s-nova2")}); toast(t("t_senha_ok")); ir("setup"); }
+    catch (e) { toast(e.http ? e.message : t("t_sem_mac")); }
+  });
+  document.getElementById("s-btn-email").addEventListener("click", async () => {
+    try { const r = await api("/api/email", {atual: v("s-email-senha"), email: v("s-email")}); S.estado.email = r.email; toast(t("t_email_ok")); ir("setup"); }
+    catch (e) { toast(e.http ? e.message : t("t_sem_mac")); }
+  });
+}
+
+function telaSetupBase() {
+  if (!form || form.tipo !== "config") form = {tipo: "config", c: JSON.parse(JSON.stringify(S.config))};
+  const c = form.c;
+  const veic = (k, ico, nome, regra) => { const v = c.veiculos[k]; return `
+    <div class="veiculo">
+      <div class="vcab"><span class="vico">${ico}</span><div><b>${nome}</b></div></div>
+      <label class="campo"><small>${t("f_modelo")}</small><input data-v="${k}.modelo" placeholder="${t("ph_modelo")}" value="${esc(v.modelo)}" autocomplete="off"></label>
+      <div class="dupla">
+        <label class="campo"><small>${t("f_mpg")}</small><input data-v="${k}.mpg" inputmode="decimal" placeholder="${t("ph_mpg")}" value="${v.mpg || ""}" autocomplete="off"></label>
+        <label class="campo"><small>${t("f_outros")}</small><input data-v="${k}.outros" inputmode="decimal" placeholder="$0.00" value="${v.outros || ""}" autocomplete="off"></label>
+      </div>
+      <label class="campo"><small>${t("f_gas_truck", {g: precoGal(c.gasolina)})}${v.gasolina_data && v.gasolina ? t("atual_em", {d: dataLonga(v.gasolina_data)}) : ""}</small><input data-v="${k}.gasolina" inputmode="decimal" placeholder="${t("ph_vazio")}" value="${v.gasolina || ""}" autocomplete="off"></label>
+      <label class="campo"><small>${t("f_fonte")}</small><input data-v="${k}.fonte_mpg" placeholder="${t("ph_fonte")}" value="${esc(v.fonte_mpg)}" autocomplete="off"></label>
+      <div class="calc" id="calc-${k}"></div>
+      <div class="regra">${regra}</div>
+    </div>`; };
+  return `${cabecalho(t("cfg_base_t"), t("cfg_sub"), "setup")}
+  <div class="conteudo">${avisos()}
+    <label class="campo"><small>${t("cfg_base")}</small><input data-v="base" value="${esc(c.base)}" autocomplete="off"></label>
+    <label class="campo"><small>${t("cfg_gas")}${c.gasolina_data ? t("atual_em", {d: dataLonga(c.gasolina_data)}) : ""}</small><input data-v="gasolina" inputmode="decimal" placeholder="${t("ph_gas")}" value="${c.gasolina || ""}" autocomplete="off"></label>
+    ${veic("dono", "🛻", t("nome_dono"), t("regra_dono"))}
+    ${veic("work", "🚐", t("nome_work"), t("regra_work"))}
+    <div class="ajuda">${t("cfg_ajuda")}</div>
+    <button class="salvar" id="salvar-config">${t("salvar_cfg")}</button>
+  </div>`;
+}
+function lerConfig() {
+  const c = form.c;
+  document.querySelectorAll("[data-v]").forEach(el => {
+    const [a, b] = el.dataset.v.split(".");
+    const texto = String(el.value).replace(",", ".");
+    const val = ["modelo", "fonte_mpg", "base"].includes(b || a) ? el.value
+              : (b || a) === "gasolina" ? Math.round((parseFloat(texto.replace(/[^0-9.]/g, "")) || 0) * 1000) / 1000 : numero(texto);
+    if (b) c.veiculos[a][b] = val; else c[a] = val;
+  });
+}
+function atualizarCalcs() {
+  lerConfig();
+  const c = form.c;
+  ["dono", "work"].forEach(k => {
+    const v = c.veiculos[k], el = document.getElementById("calc-" + k); if (!el) return;
+    const preco = v.gasolina || c.gasolina, mi = (v.mpg && preco) ? preco / v.mpg : 0;
+    el.innerHTML = v.mpg ? t("calc", {p: precoGal(preco), o: v.gasolina ? t("calc_truck") : "", mpg: v.mpg, x: dinheiro(v.outros), r: dinheiro(mi + v.outros)}) : t("calc_vazio");
+  });
+}
+async function salvarConfig() {
+  lerConfig();
+  const botao = document.getElementById("salvar-config"); botao.disabled = true;
+  try { await api("/api/config", form.c); await carregar(); toast(t("t_cfg")); ir("setup"); }
+  catch (e) { botao.disabled = false; toast(e.http ? t("t_nao", {m: e.message}) : t("t_sem_cfg")); }
+}
+
+function telaSetupExportar() {
+  const ex = S.config.exportacao || {ativa: false, pasta: ""};
+  const arq = (nome, desc) => `<div class="arq"><code>${nome}</code><span>${desc}</span></div>`;
+  return `${cabecalho(t("m_exp"), t("x_sub"), "setup")}
+  <div class="conteudo">${avisos()}
+    <div class="bloco">
+      <div class="titulo-sec"><h3>${t("x_ia_t")}</h3></div>
+      <p class="fonte">${t("x_ia_desc")}</p>
+      ${arq("LEIA-ME.md", t("x_arq1"))}${arq("jobs.json", t("x_arq2"))}${arq("despesas.json", t("x_arq3"))}${arq("jobs.csv · despesas.csv", t("x_arq4"))}${arq("fotos/", t("x_arq5"))}
+      <button class="salvar" id="x-gerar" type="button" style="margin-top:6px">${t("x_gerar")}</button>
+      <div id="x-res" class="fonte"></div>
+    </div>
+    ${LOCAL ? "" : `<div class="bloco">
+      <label class="tog"><div><b style="font-size:14px">${t("x_manter")}</b><small style="display:block;color:var(--muted);font-size:12px;margin-top:3px">${t("x_manter_d")}</small></div><input type="checkbox" id="x-ativa" ${ex.ativa ? "checked" : ""} style="width:26px;height:26px"></label>
+      <label class="campo"><small>${t("x_pasta")}</small><input id="x-pasta" placeholder="${esc(S.estado.pasta_ia_padrao || "")}" value="${esc(ex.pasta || "")}" autocomplete="off"></label>
+      <button class="btn-ghost" id="x-pasta-ok" type="button">${t("x_pasta_salvar")}</button>
+    </div>`}
+    <a class="btn-ghost" href="/api/exportar?lang=${LANG}" download>${t("x_excel")}</a>
+    <a class="btn-ghost" href="/api/backup.zip" download>${t("x_backup")}</a>
+    ${LOCAL ? `<div class="bloco"><label class="campo"><small>${t("x_rest_senha")}</small><input id="r-senha" type="password" autocomplete="current-password"></label>
+      <button class="btn-ghost" id="r-btn" type="button">${t("x_restaurar")}</button><input type="file" id="r-arq" accept=".zip,application/zip" hidden></div>` : ""}
+    <p class="dica">${LOCAL ? t("x_local_dica") : t("x_dica")}</p>
+  </div>`;
+}
+function ligarSetupExportar() {
+  if (LOCAL) {
+    document.getElementById("x-gerar").addEventListener("click", async () => {
+      try { const r = await window.RD_LOCAL.baixar("ia", LANG || "pt"); if (r.via !== "cancelado") { toast(t("t_ia_ok", {j: r.jobs, d: r.despesas})); } } catch (e) { toast(e.message); }
+    });
+    const arq = document.getElementById("r-arq");
+    document.getElementById("r-btn").addEventListener("click", () => { if (!document.getElementById("r-senha").value) { toast(t("x_rest_senha")); return; } arq.click(); });
+    arq.addEventListener("change", async e => {
+      const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+      try { const r = await window.RD_LOCAL.restaurar(f, document.getElementById("r-senha").value); await carregar(); toast(t("x_rest_ok", {j: r.jobs})); ir(""); }
+      catch (er) { toast(erroSrv(er.message) || er.message); }
+    });
+    return;
+  }
+  const mostrar = r => { const el = document.getElementById("x-res"); if (el && r.pasta) el.innerHTML = `${t("x_resultado", {p: esc(r.pasta)})}<br>${t("t_ia_ok", {j: r.jobs, d: r.despesas})}`; };
+  document.getElementById("x-gerar").addEventListener("click", async () => {
+    try { const r = await api("/api/exportacao-ia", {acao: "gerar"}); mostrar(r); toast(t("t_ia_ok", {j: r.jobs, d: r.despesas})); }
+    catch (e) { toast(e.http ? e.message : t("t_sem_mac")); }
+  });
+  document.getElementById("x-ativa").addEventListener("change", async e => {
+    try { const r = await api("/api/exportacao-ia", {ativa: e.target.checked}); S.config.exportacao = {ativa: r.ativa, pasta: r.pasta || ""}; if (r.jobs != null) mostrar(r); }
+    catch (er) { e.target.checked = !e.target.checked; toast(er.http ? er.message : t("t_sem_mac")); }
+  });
+  document.getElementById("x-pasta-ok").addEventListener("click", async () => {
+    try { const r = await api("/api/exportacao-ia", {pasta: document.getElementById("x-pasta").value}); S.config.exportacao = {ativa: r.ativa, pasta: r.pasta || ""}; toast(t("t_pasta_ok")); if (r.jobs != null) mostrar(r); }
+    catch (er) { toast(er.http ? er.message : t("t_sem_mac")); }
+  });
+}
+
+function telaSetupApagar() {
+  return `<div class="barra" style="background:#8A1F17"><div class="nav"><button data-ir="setup">${t("voltar_setup")}</button><span></span></div><h2>${t("a_t")}</h2><div class="sub">${t("a_sub")}</div></div>
+  <div class="conteudo">${avisos()}
+    <div class="perigo-box">${t("a_vai")}<ul class="lista-x"><li>${t("a_l1")}</li><li>${t("a_l2")}</li><li>${t("a_l3")}</li><li>${t("a_l4")}</li><li>${t("a_l5")}</li></ul></div>
+    <button class="btn-ghost" data-ir="setup/exportar" type="button">${t("a_exportar")}</button>
+    <label class="campo novo-campo"><small>${t("a_senha")}</small><input id="a-senha" type="password" autocomplete="current-password"></label>
+    <label class="campo novo-campo"><small>${t("a_confirma")}</small><input id="a-conf" autocomplete="off" autocapitalize="characters"></label>
+    <button class="salvar perigo" id="a-btn" type="button" disabled>${t("a_btn")}</button>
+    <p class="dica">${t("a_dica")}</p>
+  </div>`;
+}
+function ligarSetupApagar() {
+  const pintar = () => { document.getElementById("a-btn").disabled = !(document.getElementById("a-senha").value && document.getElementById("a-conf").value === "APAGAR"); };
+  ["a-senha", "a-conf"].forEach(id => document.getElementById(id).addEventListener("input", pintar));
+  document.getElementById("a-btn").addEventListener("click", async () => {
+    try {
+      await api("/api/apagar-tudo", {senha: document.getElementById("a-senha").value, confirmacao: document.getElementById("a-conf").value});
+      limparLocal(); form = null; await lerEstado(); location.hash = "#/"; render(); toast(t("t_apagado"));
+    } catch (e) { toast(e.http ? e.message : t("t_sem_mac")); }
+  });
+}
+
+function ligarSetup(sub) {
+  if (!sub) return ligarSetupMenu();
+  if (sub === "empresa") {
+    document.getElementById("emp-nome").addEventListener("input", e => { form.nome = e.target.value; document.getElementById("prev-nome").textContent = e.target.value; });
+    document.getElementById("emp-salvar").addEventListener("click", async () => {
+      try { const r = await api("/api/empresa", {nome: document.getElementById("emp-nome").value}); S.config.empresa = {...S.config.empresa, ...r}; toast(t("t_emp")); render(); }
+      catch (e) { toast(e.http ? e.message : t("t_sem_mac")); }
+    });
+    document.getElementById("logo-album").addEventListener("click", () => document.getElementById("arquivo-logo").click());
+    document.getElementById("logo-cam").addEventListener("click", () => document.getElementById("arquivo-logo-cam").click());
+    document.getElementById("logo-rm").addEventListener("click", async () => {
+      try { const emp = await api("/api/logo/remover", {}); S.config.empresa = {...S.config.empresa, ...emp}; toast(t("t_logo_rm")); render(); }
+      catch { toast(t("t_sem_mac")); }
+    });
+  }
+  if (sub === "idioma") document.querySelectorAll("[data-lang-chip]").forEach(b => b.addEventListener("click", () => { setLang(b.dataset.langChip); render(); }));
+  if (sub === "senha") ligarSetupSenha();
+  if (sub === "base") {
+    document.querySelectorAll("[data-v]").forEach(el => el.addEventListener("input", atualizarCalcs));
+    document.getElementById("salvar-config").addEventListener("click", salvarConfig);
+    atualizarCalcs();
+  }
+  if (sub === "exportar") ligarSetupExportar();
+  if (sub === "apagar") ligarSetupApagar();
+}
+
+// ---------- deslizar a despesa para o lado: mostra Excluir ----------
+const LARG_DEL = 96;
+let swipeAberto = null;
+function fecharSwipe() { if (swipeAberto) { swipeAberto.style.transition = "transform .2s"; swipeAberto.style.transform = "translateX(0)"; swipeAberto = null; } }
+function ligarSwipe() {
+  document.querySelectorAll(".swipe").forEach(w => {
+    const row = w.querySelector(".lanc");
+    let x0 = null, y0 = null, base = 0, movendo = false, bloquearClique = false;
+    const atual = () => (row === swipeAberto ? (parseFloat((row.style.transform.match(/-?[\d.]+/) || [0])[0]) || 0) : 0);
+    row.addEventListener("pointerdown", e => { x0 = e.clientX; y0 = e.clientY; movendo = false; bloquearClique = false; base = atual(); if (swipeAberto && swipeAberto !== row) fecharSwipe(); });
+    row.addEventListener("pointermove", e => {
+      if (x0 === null) return;
+      const dx = e.clientX - x0, dy = e.clientY - y0;
+      if (!movendo) { if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) { movendo = true; try { row.setPointerCapture(e.pointerId); } catch {} } else return; }
+      row.style.transition = "none";
+      const lo = base > 0 ? 0 : -LARG_DEL, hi = base < 0 ? 0 : LARG_DEL; // linha aberta: o gesto contrário só fecha
+      row.style.transform = `translateX(${Math.max(lo, Math.min(hi, base + dx))}px)`;
+    });
+    const soltar = () => {
+      if (x0 === null) return;
+      if (movendo) {
+        bloquearClique = true;
+        const v = parseFloat((row.style.transform.match(/-?[\d.]+/) || [0])[0]) || 0;
+        if (Math.abs(v) > 40) { const alvo = v < 0 ? -LARG_DEL : LARG_DEL; row.style.transition = "transform .2s"; row.style.transform = `translateX(${alvo}px)`; swipeAberto = row; }
+        else { row.style.transition = "transform .2s"; row.style.transform = "translateX(0)"; if (swipeAberto === row) swipeAberto = null; }
+      }
+      x0 = null;
+    };
+    row.addEventListener("pointerup", soltar); row.addEventListener("pointercancel", soltar);
+    // clique: se acabou de deslizar ou está aberta, não abre a despesa (só fecha)
+    w.addEventListener("click", e => {
+      if (e.target.closest(".del-btn")) return;
+      if (bloquearClique || swipeAberto === row) { e.stopPropagation(); e.preventDefault(); bloquearClique = false; if (swipeAberto === row) fecharSwipe(); }
+    }, true);
+  });
+  document.querySelectorAll(".del-btn").forEach(b => b.addEventListener("click", () => excluirLanc(b.dataset.del, b.dataset.pend === "1")));
+}
+async function excluirLanc(id, pendente) {
+  if (!confirm(t("confirm_del"))) { fecharSwipe(); return; }
+  if (pendente) { const fila = lerFila().filter(p => !(p.corpo && p.corpo.id === id)); gravarFila(fila); S.pendentes = fila; toast(t("t_excl")); }
+  else { try { await api("/api/excluir", {id}); await carregar(); toast(t("t_excl")); } catch { toast(t("t_sem_mac")); return; } }
+  swipeAberto = null; render();
+}
+
+// ---------- eventos ----------
+function ligar() {
+  if (!S.estado) return;
+  if (!S.estado.instalado) return ligarInstalar();
+  if (!LANG) { // primeira vez: só a escolha do idioma
+    document.querySelectorAll("[data-lang-pick]").forEach(b => b.addEventListener("click", () => { idiomaTemp = b.dataset.langPick; render(); }));
+    document.getElementById("continuar-idioma").addEventListener("click", () => { setLang(idiomaTemp || "pt"); render(); });
+    return;
+  }
+  if (!S.estado.logado) return ligarEntrar();
+  document.querySelectorAll("[data-ir]").forEach(el => el.addEventListener("click", () => ir(el.dataset.ir)));
+  const filtro = document.getElementById("filtro");
+  if (filtro) filtro.addEventListener("change", () => { S.filtro = filtro.value; render(); });
+  const r = rota();
+  if (r[0] === "job" && !r[2]) ligarSwipe();
+  if (r[0] === "job" && r[2] === "despesa") {
+    document.getElementById("tirar")?.addEventListener("click", () => document.getElementById("arquivo").click());
+    document.getElementById("album")?.addEventListener("click", () => document.getElementById("arquivo-album").click());
+    document.getElementById("falar").addEventListener("click", falar);
+    const d = document.getElementById("descricao");
+    d.addEventListener("input", () => { form.descricao = d.value; if (!form.itemManual) atualizarItem(); });
+    document.getElementById("valor").addEventListener("input", e => { form.valor = e.target.value; });
+    document.getElementById("data").addEventListener("change", e => { form.data = e.target.value; });
+    document.querySelectorAll("[data-item]").forEach(c => c.addEventListener("click", () => { form.item = c.dataset.item; form.itemManual = true; render(); }));
+    document.getElementById("novo-item").addEventListener("click", () => {
+      const nome = (prompt(t("prompt_item")) || "").trim().slice(0, 60);
+      if (nome) { form.extras.push(nome); form.item = nome; form.itemManual = true; render(); }
+    });
+    document.getElementById("salvar-despesa").addEventListener("click", () => salvarDespesa(r[1]));
+    document.getElementById("excluir")?.addEventListener("click", async () => {
+      if (!confirm(t("confirm_del"))) return;
+      try { await api("/api/excluir", {id: form.id}); await carregar(); toast(t("t_excl")); ir("job/" + r[1]); }
+      catch { toast(t("t_sem_mac")); }
+    });
+  }
+  if (r[0] === "setup" || r[0] === "configuracao") ligarSetup(r[0] === "setup" ? r[1] : "base");
+  if (r[0] === "novo-job" || (r[0] === "job" && r[2] === "editar")) {
+    document.querySelectorAll("[data-passo]").forEach(b => b.addEventListener("click", () => {
+      lerJobForm(); const k = b.dataset.passo; const v = (Number(form[k]) || 0) + Number(b.dataset.d);
+      form[k] = Math.max(0, Math.min(k === "horas_dia" ? 24 : 999, Math.round(v * 2) / 2));
+      if (k === "dias_work") form.diasWorkAuto = false;
+      render();
+    }));
+    ["data_inicio", "data_fim"].forEach(id => document.getElementById(id)?.addEventListener("input", atualizarHoras));
+    document.getElementById("dias_trab")?.addEventListener("input", () => { form.diasManual = true; atualizarHoras(); });
+    pintarSq();
+    document.getElementById("endereco").addEventListener("change", () => { lerJobForm(); if (form.endereco.trim() && !numero(form.sqft) && form.sqEnd !== form.endereco) buscarSqft(true); });
+    ["endereco", "cidade"].forEach(id => document.getElementById(id)?.addEventListener("input", () => {
+      lerJobForm();
+      const dest = (form.endereco || form.cidade || "") + (form.endereco && !/\bMA\b/i.test(form.endereco) ? ", MA" : "");
+      document.getElementById("ver-mapa").href = `https://maps.apple.com/?saddr=${encodeURIComponent(S.config.base)}&daddr=${encodeURIComponent(dest)}&dirflg=d`;
+    }));
+    document.querySelectorAll("[data-status]").forEach(c => c.addEventListener("click", () => { lerJobForm(); form.status = c.dataset.status; render(); }));
+    document.getElementById("salvar-job").addEventListener("click", salvarJob);
+  }
+}
+["arquivo-logo", "arquivo-logo-cam"].forEach(id => document.getElementById(id).addEventListener("change", e => { const a = e.target.files[0]; e.target.value = ""; logoEscolhido(a); }));
+["arquivo", "arquivo-album"].forEach(id => document.getElementById(id).addEventListener("change", e => { const a = e.target.files[0]; e.target.value = ""; fotoEscolhida(a); }));
+window.addEventListener("online", enviarFila);
+document.addEventListener("click", async e => {   // modo local: "baixar" vira Compartilhar/Salvar em Arquivos
+  const a = LOCAL && e.target.closest && e.target.closest("a[download]"); if (!a) return;
+  const h = a.getAttribute("href") || ""; if (!h.startsWith("/api/")) return;
+  e.preventDefault();
+  try {
+    let qual = "backup"; const u = new URL(h, "http://x");
+    if (u.pathname === "/api/exportar") qual = "excel" + (u.searchParams.get("job") ? ":" + u.searchParams.get("job") : "");
+    const r = await window.RD_LOCAL.baixar(qual, LANG || "pt"); if (r.via !== "cancelado") toast(t("t_entregue"));
+  } catch (er) { toast(er.message); }
+});
+document.addEventListener("visibilitychange", async () => { if (!document.hidden && !form && LANG) { await lerEstado(); if (S.estado.logado) { await carregar(); await enviarFila(); } render(); } });
+setInterval(() => { if (S.estado && S.estado.logado && lerFila().length) enviarFila(); }, 30000);
+
+if (LOCAL && "serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) navigator.serviceWorker.register("sw.js").catch(() => {});
+(async () => {
+  render();
+  await lerEstado();
+  if (!S.estado.instalado && !LANG) setLang(chuteIdioma());   // 1ª instalação: já começa no idioma do aparelho
+  if (S.estado.logado) await carregar();
+  render();
+  if (S.estado.logado) await enviarFila();
+})();
+</script>
+</body>
+</html>
