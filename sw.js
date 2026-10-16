@@ -1,5 +1,5 @@
 /* Service worker: guarda o app no iPhone para abrir sem internet. Nunca guarda dados do usuário (esses ficam no IndexedDB). */
-const VERSAO = "rd-pwa-v2";
+const VERSAO = "rd-pwa-v3";
 const ARQUIVOS = ["./", "index.html", "rd-local.js", "manifest.webmanifest", "icone-180.png", "icone-512.png", "fonte.woff2",
   "vendor/exceljs.min.js", "vendor/jszip.min.js", "vendor/tesseract/tesseract.min.js", "vendor/tesseract/worker.min.js",
   "vendor/tesseract/tesseract-core-relaxedsimd-lstm.wasm.js", "vendor/tesseract/tesseract-core-simd-lstm.wasm.js", "vendor/tesseract/tesseract-core-lstm.wasm.js", "vendor/tesseract/eng.traineddata.gz"];

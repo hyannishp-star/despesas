@@ -204,6 +204,11 @@
   .arq{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px dashed var(--line);font-size:13px} .arq:last-of-type{border-bottom:0}
   .arq code,.calc-linha code{background:#EEF1F5;border-radius:6px;padding:2px 7px;font-size:12px;word-break:break-all} .arq span{color:var(--muted);font-size:12px}
   .tog{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .erro-campo{color:#B3261E;font-size:13px;line-height:1.35;margin:6px 2px 0}
+  .campo.invalido{border-color:#C83028;box-shadow:0 0 0 2px rgba(200,48,40,.15)}
+  .caixa-erro{background:#FDECEA;border:1px solid #F3B6B1;border-radius:14px;padding:12px 14px;margin:0 0 12px;color:#8A1F17;font-size:14px}
+  .caixa-erro b{display:block;margin-bottom:4px}.caixa-erro ul{margin:0;padding-left:18px}
+  .job-val{background:#fff;border:1px solid var(--line,#E3E8EE);border-radius:16px;padding:12px 14px;margin-bottom:12px}
   .olho{position:absolute;right:6px;bottom:6px;width:40px;height:40px;border:0;background:transparent;font-size:20px;cursor:pointer;border-radius:10px}
   .tem-olho{position:relative}.tem-olho input{padding-right:48px}
   .tog-lista .tog{padding:14px 2px;border-bottom:1px solid var(--line,#E3E8EE)}.tog-lista .tog:last-child{border-bottom:0}
@@ -598,6 +603,21 @@ Object.assign(D, {
   c_ligado: ["ligado", "on", "activado"],
   c_desligado: ["desligado", "off", "apagado"],
   ver_senha: ["Mostrar ou ocultar a senha", "Show or hide the password", "Mostrar u ocultar la contraseña"],
+});
+Object.assign(D, {
+  d_nome_lbl: ["Nome da despesa (obrigatório)", "Expense name (required)", "Nombre del gasto (obligatorio)"],
+  d_err_nome: ["Digite o nome da despesa, por exemplo: tinta Sherwin 5 galões.", "Type the expense name, for example: Sherwin paint 5 gal.", "Escribe el nombre del gasto, por ejemplo: pintura Sherwin 5 galones."],
+  d_err_cat: ["O nome não pode ser igual à categoria \"{c}\". Escreva o que foi comprado, por exemplo: tinta Sherwin 5 galões.", "The name cannot be the same as the category \"{c}\". Write what was bought, for example: Sherwin paint 5 gal.", "El nombre no puede ser igual a la categoría \"{c}\". Escribe lo que se compró, por ejemplo: pintura Sherwin 5 galones."],
+  d_err_valor: ["Digite o valor da despesa (obrigatório).", "Type the expense amount (required).", "Escribe el monto del gasto (obligatorio)."],
+  d_err_data: ["Escolha a data da despesa (obrigatório).", "Choose the expense date (required).", "Elige la fecha del gasto (obligatorio)."],
+  d_err_topo: ["Falta preencher para salvar:", "Fix this to save:", "Falta completar para guardar:"],
+  d_job_val: ["Valor do trabalho (100%)", "Job value (100%)", "Valor del trabajo (100%)"],
+  d_job_dica: ["Mudar este valor refaz todas as contas deste job (100% = o novo valor) e pede a sua senha.", "Changing this value redoes all of this job's numbers (100% = the new value) and asks for your password.", "Cambiar este valor rehace todas las cuentas de este trabajo (100% = el nuevo valor) y pide tu contraseña."],
+  d_job_calc: ["Com {v}: despesas {d} e lucro {l} do valor do trabalho.", "With {v}: expenses {d} and profit {l} of the job value.", "Con {v}: gastos {d} y ganancia {l} del valor del trabajo."],
+  d_job_senha: ["Digite a sua senha para trocar o valor do job", "Type your password to change the job value", "Escribe tu contraseña para cambiar el valor del trabajo"],
+  d_err_senha: ["Digite a sua senha para confirmar a mudança do valor do job.", "Type your password to confirm the job value change.", "Escribe tu contraseña para confirmar el cambio del valor del trabajo."],
+  d_err_job_val: ["Valor do trabalho inválido.", "Invalid job value.", "Valor del trabajo inválido."],
+  t_job_val_ok: ["Valor do job atualizado: {v}", "Job value updated: {v}", "Valor del trabajo actualizado: {v}"],
 });
 const ERRO_SRV = [["As senhas não são iguais", "e_senhas"], ["pelo menos 8", "e_curta"], ["E-mail inválido", "e_email"], ["Senha incorreta", "e_senha_inc"], ["Muitas tentativas", "e_muitas"], ["Entre com a senha", "e_sessao"], ["Digite APAGAR", "e_apagar"], ["já está instalado", "e_ja"], ["Escolha uma pasta", "e_pasta"], ["Falta o nome da empresa", "e_emp_nome"], ["só pode ser feita no próprio Mac", "e_inst_mac"], ["ainda não foi instalado", "e_nao_inst"], ["data final antes", "e_datas"], ["imagem inválida", "e_img"], ["data inválida", "e_datas"], ["job não encontrado", "e_job"], ["valor inválido", "e_valor"], ["falta o nome", "e_nome"], ["cheque total inválido", "e_cheque"], ["preço da gasolina", "e_preco"], ["número inválido", "e_num"], ["arquivo grande", "e_grande"]];
 function t(k, p) {
@@ -995,6 +1015,50 @@ function telaNaoAchei() {
 }
 
 // ---------- tela 3: nova despesa ----------
+function nomesDeCategoria() {
+  const set = new Map();
+  for (const n of todosItens()) { set.set(sem(n).trim(), disp(n)); for (const v of ITEM_TXT[n] || []) set.set(sem(v).trim(), v); }
+  return set;
+}
+function errosDespesa(f, j) {
+  const e = [];
+  const nome = (f.descricao || "").trim();
+  if (!nome) e.push({campo: "descricao", msg: t("d_err_nome")});
+  else { const c = nomesDeCategoria().get(sem(nome).trim()); if (c) e.push({campo: "descricao", msg: t("d_err_cat", {c})}); }
+  if (!numero(f.valor)) e.push({campo: "valor", msg: t("d_err_valor")});
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(f.data || "")) e.push({campo: "data", msg: t("d_err_data")});
+  if (receitaMudou(j)) {
+    if (!(numero(String(f.receitaJob || "").replace(",", ".")) >= 0) || String(f.receitaJob || "").trim() === "") e.push({campo: "receita-job", msg: t("d_err_job_val")});
+  }
+  return e;
+}
+function erroDespHtml() {
+  const e = form && form.errosDesp; if (!e || !e.length) return "";
+  return `<div class="caixa-erro"><b>${t("d_err_topo")}</b><ul>${e.map(x => `<li>${esc(x.msg)}</li>`).join("")}</ul></div>`;
+}
+const receitaMudou = j => { const v = form && form.receitaJob; if (v == null) return false; const n = numero(String(v).replace(",", ".")); return n !== (j.receita || 0); };
+function jobCalc(j) {
+  const rec = numero(String(form.receitaJob || "").replace(",", "."));
+  const outros = despesasDo(j.id).filter(l => l.id !== form.id).reduce((a, l) => a + l.valor, 0) + truckDe(j).total + (numero(form.valor) || 0);
+  if (!rec) return "";
+  return t("d_job_calc", {v: dinheiro(rec, false), d: pct(outros / rec), l: pct(1 - outros / rec)});
+}
+function marcarErros() {
+  document.querySelectorAll(".invalido").forEach(el => el.classList.remove("invalido"));
+  for (const x of (form.errosDesp || [])) { const el = document.getElementById(x.campo); const alvo = el && (el.closest(".campo") || el.closest(".mic")); if (alvo) alvo.classList.add("invalido"); }
+  const cx = document.getElementById("caixa-erro-desp"); if (cx) cx.innerHTML = erroDespHtml();
+}
+async function salvarJobValor(j) {   // troca o valor do job depois de conferir a senha
+  const senha = document.getElementById("job-senha").value;
+  if (!senha) { form.errosDesp = [{campo: "job-senha", msg: t("d_err_senha")}]; marcarErros(); document.getElementById("job-senha").focus(); return false; }
+  try { await api("/api/entrar", {senha}); }
+  catch (e) { form.errosDesp = [{campo: "job-senha", msg: erroSrv(e.message) || e.message}]; marcarErros(); return false; }
+  const rec = numero(String(form.receitaJob).replace(",", "."));
+  await api("/api/job", {id: j.id, nome: j.nome, cidade: j.cidade || "", receita: rec, status: j.status, sqft: j.sqft || 0, endereco: j.endereco || "", milhas: j.milhas || 0,
+    idas_dono: j.idas_dono ?? 4, dias_work: j.dias_work || 0, data_inicio: j.data_inicio || "", data_fim: j.data_fim || "", dias_trabalhados: j.dias_trabalhados || 0, horas_dia: j.horas_dia ?? 8, pessoas: j.pessoas || 0});
+  toast(t("t_job_val_ok", {v: dinheiro(rec, false)}));
+  return true;
+}
 function telaDespesa(jobId, lancId) {
   const j = S.jobs.find(x => x.id === jobId);
   if (!j) return telaNaoAchei();
@@ -1004,6 +1068,7 @@ function telaDespesa(jobId, lancId) {
              : {tipo: "despesa", id: novoId(), existente: false, valor: "", item: null, itemManual: false, descricao: "", loja: "", data: hojeISO(), foto: null, extras: [], leitura: null};
   }
   const f = form;
+  if (f.receitaJob == null) f.receitaJob = j.receita ? j.receita.toFixed(2) : "";
   const img = f.foto || f.fotoUrl;
   const tag = f.leitura === "lendo" ? `<span class="tag">${t("lendo")}</span>` : f.leitura === "ok" ? `<span class="tag ok">${t("lido")}</span>` : f.leitura === "falhou" ? `<span class="tag ruim">${t("digite")}</span>` : "";
   const chips = todosItens().map(n => `<button class="chip ${f.item === n ? "on" : ""}" data-item="${esc(n)}">${esc(disp(n))}</button>`).join("");
@@ -1015,6 +1080,13 @@ function telaDespesa(jobId, lancId) {
   </div>
   <div class="conteudo">
     ${avisos()}
+    <div id="caixa-erro-desp">${erroDespHtml()}</div>
+    <div class="job-val">
+      <label class="campo" style="margin:0"><small>${t("d_job_val")}</small><input id="receita-job" class="grande" inputmode="decimal" placeholder="$0" value="${esc(f.receitaJob)}" autocomplete="off"></label>
+      <p class="dica" style="text-align:left;margin:6px 0 0">${t("d_job_dica")}</p>
+      <div class="calc-linha" id="job-calc" ${receitaMudou(j) ? "" : "hidden"}>${jobCalc(j)}</div>
+      <div id="job-senha-box" ${receitaMudou(j) ? "" : "hidden"}><label class="campo novo-campo"><small>${t("d_job_senha")}</small><input id="job-senha" type="password" autocomplete="current-password"></label></div>
+    </div>
     <div class="foto">
       ${img ? `<img src="${img}" alt="${t("alt_foto")}"><div class="trocar-box"><button class="trocar" id="tirar">${t("trocar_foto")}</button><button class="trocar" id="album">${t("trocar_album")}</button></div>`
             : `<div class="dois"><button class="tirar" id="tirar"><span>📷</span>${t("tirar_foto")}</button><button class="tirar" id="album"><span>🖼</span>${t("album")}</button></div>`}
@@ -1023,7 +1095,7 @@ function telaDespesa(jobId, lancId) {
     <p class="dica" style="text-align:left;margin-top:-6px">${t("foto_uma")}</p>
     <div class="mic">
       <button id="falar" aria-label="${t("falar_aria")}"><svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-2.08A7 7 0 0 0 19 12h-2Z"/></svg></button>
-      <div class="txt"><small id="mic-rotulo">${f.descricao ? t("voce_falou") : t("toque_fale")}</small>
+      <div class="txt"><small id="mic-rotulo">${t("d_nome_lbl")}</small>
         <textarea id="descricao" rows="2" placeholder="${t("ph_desc")}">${esc(f.descricao)}</textarea></div>
     </div>
     <p class="dica-mic" id="dica-mic" hidden>${t("dica_mic")}</p>
@@ -1085,6 +1157,12 @@ function falar() {
     reconhecedor.start();
   } catch { reconhecedor = null; dica(); }
 }
+function recalcJob(jobId) {
+  const j = S.jobs.find(x => x.id === jobId); if (!j) return;
+  const m = receitaMudou(j);
+  const c = document.getElementById("job-calc"), b = document.getElementById("job-senha-box");
+  if (c) { c.hidden = !m; c.textContent = m ? jobCalc(j) : ""; } if (b) b.hidden = !m;
+}
 function atualizarItem() {
   const novo = adivinhar(form.descricao + " " + form.loja);
   if (novo && novo !== form.item) {
@@ -1096,8 +1174,14 @@ function atualizarItem() {
 async function salvarDespesa(jobId) {
   const f = form;
   f.descricao = document.getElementById("descricao").value.trim();
-  f.valor = document.getElementById("valor").value; f.data = document.getElementById("data").value || hojeISO();
-  if (!numero(f.valor)) return toast(t("t_valor"));
+  f.valor = document.getElementById("valor").value; f.data = document.getElementById("data").value;
+  f.receitaJob = document.getElementById("receita-job").value;
+  const j = S.jobs.find(x => x.id === jobId);
+  f.errosDesp = errosDespesa(f, j);
+  marcarErros();
+  if (f.errosDesp.length) { const el = document.getElementById(f.errosDesp[0].campo); if (el) el.focus(); window.scrollTo({top: 0, behavior: "smooth"}); return; }
+  if (receitaMudou(j)) { try { if (!(await salvarJobValor(j))) return; await carregar(); } catch (e) { return toast(t("t_nao", {m: e.message})); } }
+  f.errosDesp = [];
   if (!f.item) f.item = adivinhar(f.descricao + " " + f.loja) || "Outros";
   const corpo = {id: f.id, job_id: jobId, valor: numero(f.valor), item: f.item, descricao: f.descricao, loja: f.loja, data: f.data};
   if (f.foto) corpo.foto = f.foto;
@@ -1680,8 +1764,9 @@ function ligar() {
     document.getElementById("falar").addEventListener("click", falar);
     const d = document.getElementById("descricao");
     d.addEventListener("input", () => { form.descricao = d.value; if (!form.itemManual) atualizarItem(); });
-    document.getElementById("valor").addEventListener("input", e => { form.valor = e.target.value; });
+    document.getElementById("valor").addEventListener("input", e => { form.valor = e.target.value; recalcJob(r[1]); });
     document.getElementById("data").addEventListener("change", e => { form.data = e.target.value; });
+    document.getElementById("receita-job").addEventListener("input", e => { form.receitaJob = e.target.value; recalcJob(r[1]); });
     document.querySelectorAll("[data-item]").forEach(c => c.addEventListener("click", () => { form.item = c.dataset.item; form.itemManual = true; render(); }));
     document.getElementById("novo-item").addEventListener("click", () => {
       const nome = (prompt(t("prompt_item")) || "").trim().slice(0, 60);
