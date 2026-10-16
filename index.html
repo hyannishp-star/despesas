@@ -10,7 +10,7 @@
 <meta name="theme-color" content="#1A232F">
 <link rel="apple-touch-icon" href="icone-180.png">
 <link rel="manifest" href="manifest.webmanifest">
-<title>Receitas e Despesas | Hyannis Painting</title>
+<title>Receitas e Despesas</title>
 <style>
   @font-face{font-family:"Source Serif 4";font-style:normal;font-weight:600 700;font-display:swap;src:url(fonte.woff2) format("woff2")}
   :root{
@@ -617,7 +617,7 @@ const PALAVRAS = [
 const LUCRO_MINIMO = 0.20; // Roberto 14/out/2026: alerta só quando o lucro do job fica abaixo de 20% do cheque (35% já é muito bom)
 const alerta = taxa => 1 - taxa < LUCRO_MINIMO;
 
-const CONFIG_VAZIA = {empresa: {nome: "Hyannis Painting", logo_v: 0}, base: "136 Connemara Cir, Hyannis, MA 02601", gasolina: 0, gasolina_data: "", veiculos: {dono: {modelo: "", mpg: 0, outros: 0, fonte_mpg: "", gasolina: 0}, work: {modelo: "", mpg: 0, outros: 0, fonte_mpg: "", gasolina: 0}}};
+const CONFIG_VAZIA = {empresa: {nome: "", logo_v: 0}, base: "", gasolina: 0, gasolina_data: "", veiculos: {dono: {modelo: "", mpg: 0, outros: 0, fonte_mpg: "", gasolina: 0}, work: {modelo: "", mpg: 0, outros: 0, fonte_mpg: "", gasolina: 0}}};
 const S = { estado: null, config: CONFIG_VAZIA, jobs: [], lancamentos: [], atualizado: null, pendentes: [], filtro: "todos", offline: false, carregou: false };
 let form = null; // rascunho da tela de despesa/job/configuração
 let idiomaTemp = null;
@@ -640,7 +640,7 @@ const novoId = () => { const b = new Uint8Array(16); crypto.getRandomValues(b); 
 const numero = v => { const n = parseFloat(String(v ?? "").replace(/[^0-9.]/g, "")); return isFinite(n) ? Math.round(n * 100) / 100 : 0; };
 
 // ---------- empresa (logo e nome) e horas ----------
-const nomeEmp = () => (S.config.empresa && S.config.empresa.nome) || "Hyannis Painting";
+const nomeEmp = () => (S.config.empresa && S.config.empresa.nome) || "Receitas e Despesas";
 const logoUrl = () => (S.config.empresa && S.config.empresa.logo_v) ? (LOCAL ? window.RD_LOCAL.logoUrl : `/logo?v=${S.config.empresa.logo_v}`) : "";
 function fotoSrc(n, cheia) {
   if (!LOCAL) return "/fotos/" + n;
