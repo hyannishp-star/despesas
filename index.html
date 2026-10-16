@@ -6,11 +6,11 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Despesas">
+<meta name="apple-mobile-web-app-title" content="RCC">
 <meta name="theme-color" content="#1A232F">
 <link rel="apple-touch-icon" href="icone-180.png">
 <link rel="manifest" href="manifest.webmanifest">
-<title>Receitas e Despesas</title>
+<title>RCC</title>
 <style>
   @font-face{font-family:"Source Serif 4";font-style:normal;font-weight:600 700;font-display:swap;src:url(fonte.woff2) format("woff2")}
   :root{
@@ -250,8 +250,8 @@ if (LANG) document.documentElement.lang = LANGS[LANG].loc;
 
 // cada texto: [português, english, español]
 const D = {
-  app: ["Receitas e Despesas", "Revenue and Expenses", "Ingresos y Gastos"],
-  selo: ["{e} · Receitas e Despesas · app local", "{e} · Revenue and Expenses · local app", "{e} · Ingresos y Gastos · app local"],
+  app: ["RCC · Receitas e Custos no Controle", "RCC · Revenue and Cost Control", "RCC · Ingresos y Costos bajo Control"],
+  selo: ["{e} · RCC · app local", "{e} · RCC · local app", "{e} · RCC · app local"],
   off_t: ["Sem conexão com o Mac.", "No connection to the Mac.", "Sin conexión con la Mac."],
   off_d: [" O iPhone precisa estar no Wi-Fi de casa e o Mac ligado com o app aberto. O que você lançar agora fica guardado no iPhone e vai para o Mac quando voltar a conexão.", " The iPhone must be on the home Wi-Fi and the Mac must be on. Whatever you enter now is kept on the iPhone and sent to the Mac when the connection is back.", " El iPhone debe estar en el Wi-Fi de casa y la Mac encendida. Lo que registres ahora se guarda en el iPhone y se envía a la Mac cuando vuelva la conexión."],
   pend_1: ["⏳ {n} lançamento aguardando envio ao Mac.", "⏳ {n} entry waiting to be sent to the Mac.", "⏳ {n} registro esperando envío a la Mac."],
@@ -687,7 +687,7 @@ const novoId = () => { const b = new Uint8Array(16); crypto.getRandomValues(b); 
 const numero = v => { const n = parseFloat(String(v ?? "").replace(/[^0-9.]/g, "")); return isFinite(n) ? Math.round(n * 100) / 100 : 0; };
 
 // ---------- empresa (logo e nome) e horas ----------
-const nomeEmp = () => (S.config.empresa && S.config.empresa.nome) || "Receitas e Despesas";
+const nomeEmp = () => (S.config.empresa && S.config.empresa.nome) || "RCC";
 const logoUrl = () => (S.config.empresa && S.config.empresa.logo_v) ? (LOCAL ? window.RD_LOCAL.logoUrl : `/logo?v=${S.config.empresa.logo_v}`) : "";
 function fotoSrc(n, cheia) {
   if (!LOCAL) return "/fotos/" + n;
@@ -856,8 +856,8 @@ function telaIdioma() {
   return `
   <div class="barra">
     <div class="nav">${marca()}<span></span></div>
-    <h2>Receitas e Despesas</h2>
-    <div class="sub">Revenue and Expenses · Ingresos y Gastos</div>
+    <h2>RCC</h2>
+    <div class="sub">Receitas e Custos no Controle · Revenue and Cost Control</div>
   </div>
   <div class="conteudo">
     <p class="grande-titulo">Escolha o idioma<br><span style="color:var(--muted);font-size:17px">Choose your language · Elige el idioma</span></p>
